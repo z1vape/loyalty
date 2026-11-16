@@ -47,81 +47,128 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+
+        /* HR-style Minimized Sidebar (Rail Mode) */
+        #loyalty-sidebar.is-minimized {
+            width: 4.25rem !important; /* 68px */
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+
+        #loyalty-sidebar.is-minimized #sidebar-brand-box {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            text-align: center !important;
+        }
+
+        #loyalty-sidebar.is-minimized .sidebar-brand-text {
+            display: none !important;
+        }
+
+        #loyalty-sidebar.is-minimized .sidebar-mini-text {
+            display: block !important;
+        }
+
+        #loyalty-sidebar.is-minimized .loy-nav-text,
+        #loyalty-sidebar.is-minimized .loy-section-title,
+        #loyalty-sidebar.is-minimized .loy-toggle-label,
+        #loyalty-sidebar.is-minimized .loy-portal-label {
+            display: none !important;
+        }
+
+        #loyalty-sidebar.is-minimized .loy-section-divider {
+            display: block !important;
+        }
+
+        #loyalty-sidebar.is-minimized .loy-nav-item {
+            justify-content: center !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            width: 2.75rem !important;
+            height: 2.5rem !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+
+        #loyalty-sidebar.is-minimized .loy-footer-box {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        #loyalty-sidebar.is-minimized .loy-toggle-icon {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 <body class="bg-[#f8fafc] text-slate-800 font-sans min-h-screen flex antialiased selection:bg-brand-100 selection:text-brand-900">
 
-    {{-- SIDEBAR KIRI --}}
-    <aside class="w-64 xl:w-72 bg-white border-r border-slate-200/90 shrink-0 sticky top-0 h-screen flex flex-col justify-between p-4 z-30 shadow-xs">
-        <div class="space-y-5">
-            {{-- Header Logo Brand --}}
-            <div class="flex items-center gap-3 px-2 pt-1 pb-3 border-b border-slate-100">
-                <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-[#006c49] via-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 shrink-0">
-                    <span class="material-symbols-outlined text-[22px]">loyalty</span>
+    {{-- SIDEBAR KIRI (Persis Human Resources) --}}
+    <aside id="loyalty-sidebar" class="w-64 xl:w-72 bg-white border-r border-slate-200/90 shrink-0 sticky top-0 h-screen flex flex-col justify-between p-4 z-30 shadow-xs transition-all duration-200">
+        <div class="space-y-4">
+            {{-- Header Brand Box (Clean text-only persis Human Resources) --}}
+            <div id="sidebar-brand-box" class="px-3 pt-1 pb-3.5 border-b border-slate-100">
+                <div class="sidebar-brand-text">
+                    <h1 class="text-xs font-black text-slate-900 uppercase tracking-wider leading-tight">MEMBER LOYALTY</h1>
+                    <p class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">Z1 Digital Membership</p>
                 </div>
-                <div>
-                    <h1 class="font-bold text-base text-slate-900 tracking-tight leading-none">Z1 Loyalty</h1>
-                    <p class="text-[11px] text-slate-500 font-medium mt-0.5">Sistem Member &amp; Kasir</p>
-                </div>
+                <div class="sidebar-mini-text font-black text-xs text-[#006c49] hidden text-center">LOY</div>
             </div>
 
             {{-- Navigation Menu Items --}}
-            <nav class="space-y-1.5" id="sidebarMenu">
-                {{-- 1. Dashboard (Scanner) --}}
-                <button type="button" onclick="switchTab('dashboard')" id="nav-btn-dashboard"
-                    class="nav-item w-full text-left px-3.5 py-3 rounded-xl flex items-center justify-between text-xs font-semibold transition-all cursor-pointer {{ $activeTab === 'dashboard' ? 'bg-[#006c49] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
-                    <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-[20px]">qr_code_scanner</span>
-                        <div>
-                            <div class="leading-tight font-bold">Dashboard</div>
-                            <div class="text-[10px] {{ $activeTab === 'dashboard' ? 'text-white/80' : 'text-slate-400' }} font-normal mt-0.5">Scan Barcode / QR Kasir</div>
-                        </div>
-                    </div>
-                    <span class="material-symbols-outlined text-sm {{ $activeTab === 'dashboard' ? 'text-white' : 'text-slate-400' }}">chevron_right</span>
+            <nav class="space-y-1 text-xs" id="sidebarMenu">
+                {{-- 1. Dashboard Kasir (Top item aktif style persis Dashboard HR) --}}
+                <button type="button" onclick="switchTab('dashboard')" id="nav-btn-dashboard" title="Dashboard Kasir"
+                    class="loy-nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all cursor-pointer {{ $activeTab === 'dashboard' ? 'bg-[#5cf3b3] text-[#004d34] font-extrabold shadow-2xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium' }}">
+                    <span class="material-symbols-outlined text-[19px] shrink-0">dashboard</span>
+                    <span class="truncate loy-nav-text">Dashboard Kasir</span>
                 </button>
 
-                {{-- 2. Member Loyalty (Daftar & Create) --}}
-                <button type="button" onclick="switchTab('members')" id="nav-btn-members"
-                    class="nav-item w-full text-left px-3.5 py-3 rounded-xl flex items-center justify-between text-xs font-semibold transition-all cursor-pointer {{ $activeTab === 'members' ? 'bg-[#006c49] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
-                    <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-[20px]">group</span>
-                        <div>
-                            <div class="leading-tight font-bold">Member Loyalty</div>
-                            <div class="text-[10px] {{ $activeTab === 'members' ? 'text-white/80' : 'text-slate-400' }} font-normal mt-0.5">Daftar &amp; Registrasi Member</div>
-                        </div>
-                    </div>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $activeTab === 'members' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200' }}">
-                        {{ $customers->total() }}
-                    </span>
+                {{-- Section 1: MANAJEMEN MEMBER --}}
+                <div class="loy-section-title pt-3 pb-1 px-3 text-[10px] font-bold text-slate-700 uppercase tracking-wider">Manajemen Member</div>
+                <div class="loy-section-divider my-2 border-t border-slate-200/60 hidden"></div>
+
+                {{-- Member Loyalty (Daftar) --}}
+                <button type="button" onclick="switchTab('members')" id="nav-btn-members" title="Daftar Member"
+                    class="loy-nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all cursor-pointer {{ $activeTab === 'members' ? 'bg-[#5cf3b3] text-[#004d34] font-extrabold shadow-2xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium' }}">
+                    <span class="material-symbols-outlined text-[19px] shrink-0">how_to_reg</span>
+                    <span class="truncate loy-nav-text">Daftar Member</span>
                 </button>
 
-                {{-- 3. Tier (Pengaturan Tier Pembelanjaan) --}}
-                <button type="button" onclick="switchTab('tiers')" id="nav-btn-tiers"
-                    class="nav-item w-full text-left px-3.5 py-3 rounded-xl flex items-center justify-between text-xs font-semibold transition-all cursor-pointer {{ $activeTab === 'tiers' ? 'bg-[#006c49] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
-                    <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-[20px]">military_tech</span>
-                        <div>
-                            <div class="leading-tight font-bold">Tier</div>
-                            <div class="text-[10px] {{ $activeTab === 'tiers' ? 'text-white/80' : 'text-slate-400' }} font-normal mt-0.5">Pengaturan Tier &amp; Poin</div>
-                        </div>
-                    </div>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $activeTab === 'tiers' ? 'bg-white/20 text-white' : 'bg-amber-50 text-amber-700 border border-amber-200' }}">
-                        3 Tier
-                    </span>
+                {{-- Registrasi Member Baru (Modal Quick Access) --}}
+                <button type="button" onclick="openRegisterModal()" title="Registrasi Member Baru"
+                    class="loy-nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium">
+                    <span class="material-symbols-outlined text-[19px] shrink-0">person_add</span>
+                    <span class="truncate loy-nav-text">Registrasi Member</span>
+                </button>
+
+                {{-- Section 2: PENGATURAN & TIER --}}
+                <div class="loy-section-title pt-3 pb-1 px-3 text-[10px] font-bold text-slate-700 uppercase tracking-wider">Pengaturan &amp; Tier</div>
+                <div class="loy-section-divider my-2 border-t border-slate-200/60 hidden"></div>
+
+                {{-- Tier & Poin --}}
+                <button type="button" onclick="switchTab('tiers')" id="nav-btn-tiers" title="Pengaturan Tier & Poin"
+                    class="loy-nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all cursor-pointer {{ $activeTab === 'tiers' ? 'bg-[#5cf3b3] text-[#004d34] font-extrabold shadow-2xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium' }}">
+                    <span class="material-symbols-outlined text-[19px] shrink-0">military_tech</span>
+                    <span class="truncate loy-nav-text">Tier &amp; Poin</span>
                 </button>
             </nav>
         </div>
 
-        {{-- Bottom: Kembali ke Portal Workspace --}}
-        <div class="pt-4 border-t border-slate-200/80 space-y-2">
-            <a href="{{ route('portal') }}" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-2.5 transition border border-slate-200/80 no-underline shadow-2xs">
-                <span class="material-symbols-outlined text-[19px] text-slate-500">apps</span>
-                <span>Kembali ke Portal</span>
+        {{-- Footer Sidebar: Toggle Minimize / Expand (Persis seperti Human Resources) --}}
+        <div class="loy-footer-box mt-auto pt-3 border-t border-slate-200/70 space-y-2">
+            <button type="button" onclick="toggleLoyaltySidebar()" title="Minimize / Perluas Sidebar"
+                class="loy-nav-item w-full flex items-center justify-between px-3 py-2 rounded-xl bg-[#eff4fe] hover:bg-[#e4edfd] text-slate-700 transition-all cursor-pointer border border-blue-100 shadow-2xs">
+                <span class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px] shrink-0">dock_to_left</span>
+                    <span class="truncate loy-toggle-label text-[11px] font-bold">Minimize Sidebar</span>
+                </span>
+                <span class="material-symbols-outlined text-[18px] shrink-0 loy-toggle-icon">chevron_left</span>
+            </button>
+
+            <a href="{{ route('portal') }}" title="Kembali ke Portal" class="loy-nav-item w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 text-xs font-semibold transition-all no-underline">
+                <span class="material-symbols-outlined text-[18px] shrink-0">apps</span>
+                <span class="truncate loy-portal-label">Kembali ke Portal</span>
             </a>
-            <div class="px-2 py-1 flex items-center justify-between text-[11px] text-slate-400">
-                <span>Z1 VapeOS</span>
-                <span class="font-mono">v1.2.0</span>
-            </div>
         </div>
     </aside>
 
@@ -605,6 +652,9 @@
     <script>
         let currentScannedCustomerId = null;
 
+        const activeNavClass = 'loy-nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all cursor-pointer bg-[#5cf3b3] text-[#004d34] font-extrabold shadow-2xs';
+        const inactiveNavClass = 'loy-nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium';
+
         // Switch Sidebar Tab
         function switchTab(tab) {
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
@@ -612,13 +662,10 @@
             if (targetPane) targetPane.classList.remove('hidden');
 
             // Update sidebar buttons style
-            document.querySelectorAll('.nav-item').forEach(btn => {
-                btn.className = 'nav-item w-full text-left px-3.5 py-3 rounded-xl flex items-center justify-between text-xs font-semibold transition-all cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-100';
+            ['dashboard', 'members', 'tiers'].forEach(t => {
+                const btn = document.getElementById('nav-btn-' + t);
+                if (btn) btn.className = (t === tab) ? activeNavClass : inactiveNavClass;
             });
-            const activeBtn = document.getElementById('nav-btn-' + tab);
-            if (activeBtn) {
-                activeBtn.className = 'nav-item w-full text-left px-3.5 py-3 rounded-xl flex items-center justify-between text-xs font-semibold transition-all cursor-pointer bg-[#006c49] text-white shadow-xs';
-            }
 
             // Update Header Title
             const titles = {
@@ -643,6 +690,28 @@
             const url = new URL(window.location);
             url.searchParams.set('tab', tab);
             window.history.pushState({}, '', url);
+        }
+
+        // Toggle Minimize / Expand Sidebar (Persis seperti Human Resources)
+        function toggleLoyaltySidebar() {
+            const sidebar = document.getElementById('loyalty-sidebar');
+            if (!sidebar) return;
+            const isMin = sidebar.classList.contains('is-minimized');
+            if (isMin) {
+                sidebar.classList.remove('is-minimized');
+                localStorage.setItem('z1_loyalty_sidebar_minimized', 'false');
+            } else {
+                sidebar.classList.add('is-minimized');
+                localStorage.setItem('z1_loyalty_sidebar_minimized', 'true');
+            }
+        }
+
+        // Apply initial state from localStorage
+        if (localStorage.getItem('z1_loyalty_sidebar_minimized') === 'true') {
+            document.addEventListener('DOMContentLoaded', function() {
+                const sidebar = document.getElementById('loyalty-sidebar');
+                if (sidebar) sidebar.classList.add('is-minimized');
+            });
         }
 
         function openRegisterModal() {
