@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Z1 Loyalty Card - {{ $customer->name }}</title>
+    @php
+        $cardBgPath = public_path('images/cropped-card.png');
+        if (!file_exists($cardBgPath)) {
+            $fallbackPath = base_path('public/images/cropped-card.png');
+            if (file_exists($fallbackPath)) {
+                $cardBgPath = $fallbackPath;
+            } elseif (file_exists(base_path('images/cropped-card.png'))) {
+                $cardBgPath = base_path('images/cropped-card.png');
+            }
+        }
+        
+        $cardBgDataUri = file_exists($cardBgPath)
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($cardBgPath))
+            : asset('public/images/cropped-card.png');
+    @endphp
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- QR Code JS -->
@@ -33,7 +48,7 @@
         .card-3d {
             aspect-ratio: 652 / 427;
             position: relative;
-            background-image: url('{{ asset("images/cropped-card.png") }}?v={{ filemtime(public_path("images/cropped-card.png")) }}');
+            background-image: url('{{ $cardBgDataUri }}');
             background-size: 100% 100%;
             background-repeat: no-repeat;
             background-position: center;

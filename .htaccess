@@ -10,6 +10,12 @@
     RewriteRule ^\.env$ - [F,L]
     RewriteRule ^database/database\.sqlite$ - [F,L]
 
+    # Serve static assets from public/ if not found in root
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(images|build|icons|storage)/(.*)$ public/$1/$2 [L,NC]
+    RewriteRule ^(favicon\.ico|robots\.txt|manifest\.json|sw\.js)$ public/$1 [L,NC]
+
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
