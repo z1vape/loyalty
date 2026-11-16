@@ -239,7 +239,7 @@ class SaleController extends Controller
         Gate::authorize('Sales Create');
 
         $products = Product::where('stock', '>', 0)->orderBy('name')->get();
-        $categoryPointRules = \App\Models\LoyaltyCategoryRule::where('is_active', true)->pluck('spend_per_point', 'category_name');
+        $categoryPointRules = \App\Models\LoyaltyCategoryRule::where('is_active', true)->pluck('points_per_item', 'category_name');
         return view('sales.create', compact('products', 'categoryPointRules'));
     }
 
@@ -340,14 +340,19 @@ class SaleController extends Controller
                     $liquidBottlesCount += (int) $itemData['quantity'];
                 }
 
-                // Calculate Category Points for this item
+                // Calculate Category Points for this item (Fixed points per item)
                 if ($customer) {
                     $catKey = strtolower(trim($product->category ?? ''));
                     $rule = $categoryRules->get($catKey);
-                    $spendPerPoint = ($rule && $rule->spend_per_point > 0) ? $rule->spend_per_point : 10000;
-                    if ($rule === null || $rule->is_active) {
-                        $rawPointsForItem = floor((float) $itemData['subtotal'] / $spendPerPoint);
-                        $totalRawPointsEarned += $rawPointsForItem;
+                    $qty = (int) $itemData['quantity'];
+                    if ($rule) {
+                        if ($rule->is_active) {
+                            $ptsPerItem = (int) ($rule->points_per_item ?? 1);
+                            $totalRawPointsEarned += ($ptsPerItem * $qty);
+                        }
+                    } else {
+                        // Default 1 point per item if category has no specific rule
+                        $totalRawPointsEarned += (1 * $qty);
                     }
                 }
 

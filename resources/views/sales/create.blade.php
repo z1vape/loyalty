@@ -310,23 +310,21 @@
             grandSubtotal += (qty * price);
             totalDiscount += discount;
 
-            // Calculate category points for this item
-            if (productId && activeCustomer && finalSubtotal > 0) {
+            // Calculate category points for this item (Fixed points per item)
+            if (productId && activeCustomer && qty > 0) {
                 const prod = productsData.find(p => p.id == productId);
                 if (prod) {
                     const catName = (prod.category || '').toLowerCase().trim();
-                    let spendPerPoint = 10000;
+                    let ptsPerItem = 1;
                     if (categoryPointRules) {
                         for (const [k, v] of Object.entries(categoryPointRules)) {
                             if (k.toLowerCase().trim() === catName) {
-                                spendPerPoint = parseFloat(v) || 10000;
+                                ptsPerItem = parseInt(v) || 0;
                                 break;
                             }
                         }
                     }
-                    if (spendPerPoint > 0) {
-                        totalRawPointsEarned += Math.floor(finalSubtotal / spendPerPoint);
-                    }
+                    totalRawPointsEarned += (ptsPerItem * qty);
                 }
             }
         });

@@ -209,6 +209,7 @@ class LoyaltyCardController extends Controller
             LoyaltyCategoryRule::updateOrCreate(
                 ['category_name' => $catName],
                 [
+                    'points_per_item' => max(0, (int) ($ruleData['points_per_item'] ?? 1)),
                     'spend_per_point' => max(1000, (int) ($ruleData['spend_per_point'] ?? 10000)),
                     'is_active' => !empty($ruleData['is_active']),
                 ]
@@ -220,7 +221,8 @@ class LoyaltyCardController extends Controller
             LoyaltyCategoryRule::updateOrCreate(
                 ['category_name' => trim($request->new_category_name)],
                 [
-                    'spend_per_point' => max(1000, (int) $request->input('new_spend_per_point', 10000)),
+                    'points_per_item' => max(0, (int) $request->input('new_points_per_item', 1)),
+                    'spend_per_point' => max(1000, (int) $request->input('new_category_spend', 10000)),
                     'is_active' => true,
                 ]
             );

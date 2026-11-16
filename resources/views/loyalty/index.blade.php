@@ -567,7 +567,7 @@
                                     Aturan Perolehan Poin per Kategori Barang
                                 </h3>
                                 <p class="text-xs text-slate-500 mt-0.5">
-                                    Poin didapat dari pembelian barang berdasarkan kategori produk yang telah ada. Atur nominal belanja (Rp) yang dibutuhkan untuk mendapatkan 1 Poin pada setiap kategori.
+                                    Tentukan jumlah poin yang langsung didapat pelanggan untuk setiap pembelian 1 pcs / botol barang pada kategori terkait.
                                 </p>
                             </div>
                             <div class="text-right">
@@ -583,7 +583,7 @@
                                     <tr>
                                         <th class="py-3 px-4 w-20 text-center">Status</th>
                                         <th class="py-3 px-4">Kategori Produk</th>
-                                        <th class="py-3 px-4 w-60">Nominal Belanja per 1 Poin (Rp)</th>
+                                        <th class="py-3 px-4 w-52">Poin per Item / Satuan</th>
                                         <th class="py-3 px-4">Simulasi Perolehan Poin Kasir</th>
                                     </tr>
                                 </thead>
@@ -596,7 +596,7 @@
                                             $catKey = strtolower(trim($cat));
                                             $rule = $ruleMap->get($catKey);
                                             $isActive = $rule ? (bool)$rule->is_active : true;
-                                            $spendPerPoint = $rule ? $rule->spend_per_point : 10000;
+                                            $pointsPerItem = $rule ? ($rule->points_per_item ?? 1) : 1;
                                         @endphp
                                         <tr class="hover:bg-slate-50/70 transition-colors">
                                             <td class="py-3 px-4 text-center">
@@ -606,18 +606,19 @@
                                             <td class="py-3 px-4 font-bold text-slate-900">
                                                 <div class="flex items-center gap-2">
                                                     <span class="w-2 h-2 rounded-full {{ $isActive ? 'bg-emerald-500' : 'bg-slate-300' }}"></span>
-                                                    <span>{{ $cat }}</span>
+                                                    <span class="text-sm">{{ $cat }}</span>
                                                 </div>
                                             </td>
                                             <td class="py-3 px-4">
                                                 <div class="flex items-center gap-1.5">
-                                                    <span class="text-xs text-slate-400 font-semibold">Rp</span>
-                                                    <input type="number" step="1000" min="1000" name="rules[{{ $cat }}][spend_per_point]" value="{{ $spendPerPoint }}"
-                                                        class="w-full px-3 py-1.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49]" />
+                                                    <input type="number" step="1" min="0" max="1000" name="rules[{{ $cat }}][points_per_item]" value="{{ $pointsPerItem }}"
+                                                        class="w-20 px-3 py-1.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-800 focus:border-[#006c49] text-center" />
+                                                    <span class="text-xs text-slate-600 font-bold">Poin / pcs</span>
                                                 </div>
                                             </td>
-                                            <td class="py-3 px-4 text-slate-500 font-mono text-[11px]">
-                                                Belanja Rp 100.000 = <strong class="text-emerald-700">{{ floor(100000 / max(1, $spendPerPoint)) }} Poin</strong> dasar
+                                            <td class="py-3 px-4 text-slate-600 font-mono text-[11px]">
+                                                Beli 1 pcs = <strong class="text-emerald-700 font-bold">+{{ $pointsPerItem }} Poin</strong>
+                                                <span class="text-slate-400 ml-1.5">(Beli 2 pcs = +{{ $pointsPerItem * 2 }} Poin)</span>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -628,12 +629,12 @@
                         {{-- Quick Add Custom Category Rule --}}
                         <div class="pt-4 border-t border-slate-100 bg-slate-50/60 p-4 rounded-xl flex flex-col sm:flex-row items-center gap-3">
                             <span class="text-xs font-bold text-slate-700 shrink-0">+ Tambah Kategori Lain:</span>
-                            <input type="text" name="new_category_name" placeholder="Nama Kategori (contoh: Cotton / T-Shirt)"
+                            <input type="text" name="new_category_name" placeholder="Nama Kategori..."
                                 class="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:border-[#006c49]" />
-                            <div class="flex items-center gap-1.5 w-48">
-                                <span class="text-xs text-slate-400 font-semibold">Rp</span>
-                                <input type="number" step="1000" min="1000" name="new_category_spend" placeholder="10000"
-                                    class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49]" />
+                            <div class="flex items-center gap-1.5 w-44">
+                                <input type="number" step="1" min="0" name="new_points_per_item" placeholder="1"
+                                    class="w-20 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49] text-center font-bold" />
+                                <span class="text-xs text-slate-600 font-semibold">Poin / pcs</span>
                             </div>
                         </div>
 
