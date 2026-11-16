@@ -152,7 +152,19 @@
             <div class="flex items-center space-x-2">
                 <span class="font-orbitron font-black text-sm text-white tracking-widest">Z1 VAPE STORE</span>
             </div>
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase font-orbitron bg-slate-800 text-slate-300 border border-slate-700">
+            @php
+                $tierColor = $currentTierModel?->badge_color ?? 'slate';
+                $tierBadgeColors = [
+                    'slate' => 'bg-slate-800 text-slate-300 border-slate-700',
+                    'emerald' => 'bg-emerald-950/80 text-emerald-400 border-emerald-700/60',
+                    'cyan' => 'bg-sky-950/80 text-sky-400 border-sky-700/60',
+                    'amber' => 'bg-amber-950/80 text-amber-400 border-amber-700/60',
+                    'purple' => 'bg-purple-950/80 text-purple-400 border-purple-700/60',
+                    'rose' => 'bg-rose-950/80 text-rose-400 border-rose-700/60',
+                ];
+                $tierBadgeClass = $tierBadgeColors[$tierColor] ?? $tierBadgeColors['slate'];
+            @endphp
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase font-orbitron border {{ $tierBadgeClass }}">
                 ★ {{ $customer->tier }}
             </span>
         </div>
@@ -215,7 +227,7 @@
         </p>
 
         {{-- MEMBER POINTS WIDGET (RAPI, MEWAH & SESUAI TEMA KARTU) --}}
-        <div class="rounded-2xl px-6 py-5 border border-slate-700/80 relative"
+        <div class="rounded-2xl px-6 py-5 border border-slate-700/80 relative space-y-4"
              style="background: linear-gradient(145deg, #131722 0%, #0c0f16 60%, #151924 100%); box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);">
             <div class="flex items-center justify-between">
                 <div>
@@ -237,9 +249,46 @@
                         Potongan Belanja
                     </span>
                     <div class="font-code font-bold text-base sm:text-lg text-emerald-400 tracking-wide leading-none drop-shadow">
-                        Rp {{ number_format($customer->points * 100, 0, ',', '.') }}
+                        Rp {{ number_format($customer->points * ($currentTierModel->point_value_rp ?? 100), 0, ',', '.') }}
                     </div>
                 </div>
+            </div>
+
+            {{-- Member Tier Perks & Next Tier Progress --}}
+            <div class="pt-3 border-t border-slate-800 text-xs text-slate-400 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold text-slate-300 flex items-center gap-1.5">
+                        <span class="text-amber-400">★</span> Tier {{ $customer->tier }}
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/50 text-emerald-400 font-mono text-[10px] font-bold">
+                            {{ $currentTierModel->point_multiplier ?? 1 }}x Poin
+                        </span>
+                        @if(($currentTierModel->discount_percent ?? 0) > 0)
+                            <span class="px-2 py-0.5 rounded bg-indigo-950/60 border border-indigo-800/50 text-indigo-300 font-mono text-[10px] font-bold">
+                                Diskon {{ $currentTierModel->discount_percent }}%
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                @if(!empty($currentTierModel->perks))
+                    <p class="text-[11px] text-slate-400 italic">
+                        {{ $currentTierModel->perks }}
+                    </p>
+                @endif
+
+                @if(!empty($nextTierModel) && ($amountToNextTier ?? 0) > 0)
+                    <div class="pt-2 border-t border-slate-800/60 space-y-1">
+                        <div class="flex items-center justify-between text-[10px]">
+                            <span class="text-slate-400">Menuju Tier <strong class="text-white">{{ $nextTierModel->name }}</strong>:</span>
+                            <span class="text-amber-400 font-mono font-bold">Rp {{ number_format($amountToNextTier, 0, ',', '.') }} lagi</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-gradient-to-r from-emerald-500 to-amber-400 h-1.5 rounded-full" style="width: {{ $tierProgressPercent }}%"></div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 

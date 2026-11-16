@@ -4,56 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\LoyaltyLog;
+use App\Models\LoyaltyTier;
+use App\Models\LoyaltyCategoryRule;
+use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class LoyaltyCardController extends Controller
 {
-    /**
-     * Get or initialize default tier configuration
-     */
-    public static function getTierConfig(): array
-    {
-        try {
-            $setting = Setting::where('type', 'loyalty_tier_config')->first();
-            if ($setting && !empty($setting->value)) {
-                $decoded = json_decode($setting->value, true);
-                if (is_array($decoded)) {
-                    return $decoded;
-                }
-            }
-        } catch (\Throwable $e) {
-            // Fallback to default
-        }
-
-        return [
-            'rookie' => [
-                'name' => 'Rookie',
-                'min_spend' => 0,
-                'point_multiplier' => 1.0,
-                'perks' => 'Akses Member, Stempel Liquid & Tukar Poin Diskon',
-            ],
-            'cloud_chaser' => [
-                'name' => 'Cloud Chaser',
-                'min_spend' => 1500000,
-                'point_multiplier' => 1.25,
-                'perks' => 'Bonus Perolehan Poin 1.25x, Diskon Promo Bulanan',
-            ],
-            'master' => [
-                'name' => 'Master',
-                'min_spend' => 3500000,
-                'point_multiplier' => 1.5,
-                'perks' => 'Bonus Perolehan Poin 1.5x, Antrean Kasir Prioritas & Merchandise',
-            ],
-            'rules' => [
-                'spend_per_point' => 10000,
-                'point_value_rp' => 100,
-                'welcome_bonus' => 50,
-            ]
-        ];
-    }
-
     /**
      * Cashier & Admin Portal: Main Loyalty Dashboard
      */
@@ -77,64 +36,168 @@ class LoyaltyCardController extends Controller
 
         $customers = $customersQuery->latest()->paginate(15)->withQueryString();
 
-        $tierConfig = static::getTierConfig();
+        // 1. Tiers with customer count
+        $tiers = LoyaltyTier::withCount('customers')->orderBy('level')->get();
 
-        // Tier Member Counts & Percentages
+        // 2. Category Point Rules
+        $categoryRules = LoyaltyCategoryRule::orderBy('category_name')->get();
+
+        // 3. Gather all known product categories across the system
+        $productCategories = Product::withoutGlobalScopes()
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->distinct()
+            ->pluck('category')
+            ->toArray();
+        $settingCategories = Setting::withoutGlobalScopes()
+            ->where('type', 'category')
+            ->pluck('value')
+            ->toArray();
+        $allCategories = array_unique(array_merge($productCategories, $settingCategories, $categoryRules->pluck('category_name')->toArray()));
+        sort($allCategories);
+
+        // 4. Welcome bonus setting
+        $welcomeBonusSetting = Setting::withoutGlobalScopes()->where('type', 'loyalty_welcome_bonus')->first();
+        $welcomeBonus = $welcomeBonusSetting ? (int) $welcomeBonusSetting->value : 50;
+
         $totalCustomers = max(1, Customer::count());
-        $tierCounts = [
-            'Rookie' => Customer::where('tier', 'Rookie')->count(),
-            'Cloud Chaser' => Customer::where('tier', 'Cloud Chaser')->count(),
-            'Master' => Customer::where('tier', 'Master')->count(),
-        ];
 
         return view('loyalty.index', compact(
             'customers',
             'search',
             'activeTab',
-            'tierConfig',
-            'tierCounts',
+            'tiers',
+            'categoryRules',
+            'allCategories',
+            'welcomeBonus',
             'totalCustomers'
         ));
     }
 
     /**
-     * Update tier configuration and point rules
+     * Store a newly created Loyalty Tier
      */
-    public function updateTiers(Request $request)
+    public function storeTier(Request $request)
     {
-        $tiers = [
-            'rookie' => [
-                'name' => 'Rookie',
-                'min_spend' => (float) $request->input('tier_rookie_min_spend', 0),
-                'point_multiplier' => (float) $request->input('tier_rookie_multiplier', 1.0),
-                'perks' => $request->input('tier_rookie_perks', 'Akses Member, Stempel Liquid & Tukar Poin Diskon'),
-            ],
-            'cloud_chaser' => [
-                'name' => 'Cloud Chaser',
-                'min_spend' => (float) $request->input('tier_cloud_min_spend', 1500000),
-                'point_multiplier' => (float) $request->input('tier_cloud_multiplier', 1.25),
-                'perks' => $request->input('tier_cloud_perks', 'Bonus Perolehan Poin 1.25x, Diskon Promo Bulanan'),
-            ],
-            'master' => [
-                'name' => 'Master',
-                'min_spend' => (float) $request->input('tier_master_min_spend', 3500000),
-                'point_multiplier' => (float) $request->input('tier_master_multiplier', 1.5),
-                'perks' => $request->input('tier_master_perks', 'Bonus Perolehan Poin 1.5x, Antrean Kasir Prioritas & Merchandise'),
-            ],
-            'rules' => [
-                'spend_per_point' => max(1000, (int) $request->input('spend_per_point', 10000)),
-                'point_value_rp' => max(1, (int) $request->input('point_value_rp', 100)),
-                'welcome_bonus' => max(0, (int) $request->input('welcome_bonus', 50)),
-            ]
-        ];
+        $validated = $request->validate([
+            'name' => 'required|string|max:50|unique:loyalty_tiers,name',
+            'level' => 'required|integer|min:1',
+            'min_spend' => 'required|numeric|min:0',
+            'point_multiplier' => 'required|numeric|min:0.1|max:10',
+            'discount_percent' => 'required|numeric|min:0|max:100',
+            'point_value_rp' => 'required|integer|min:1',
+            'badge_color' => 'nullable|string|max:20',
+            'perks' => 'nullable|string|max:500',
+        ]);
 
-        Setting::updateOrCreate(
-            ['type' => 'loyalty_tier_config'],
-            ['value' => json_encode($tiers)]
-        );
+        $validated['badge_color'] = $validated['badge_color'] ?? 'slate';
+        $validated['is_default'] = $request->has('is_default');
+
+        if ($validated['is_default']) {
+            LoyaltyTier::where('is_default', true)->update(['is_default' => false]);
+        }
+
+        LoyaltyTier::create($validated);
 
         return redirect()->route('loyalty.index', ['tab' => 'tiers'])
-                         ->with('success', 'Pengaturan tier pembelanjaan dan perolehan poin berhasil diperbarui!');
+                         ->with('success', "Tier '{$validated['name']}' berhasil ditambahkan!");
+    }
+
+    /**
+     * Update an existing Loyalty Tier
+     */
+    public function updateTier(Request $request, LoyaltyTier $tier)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:50|unique:loyalty_tiers,name,' . $tier->id,
+            'level' => 'required|integer|min:1',
+            'min_spend' => 'required|numeric|min:0',
+            'point_multiplier' => 'required|numeric|min:0.1|max:10',
+            'discount_percent' => 'required|numeric|min:0|max:100',
+            'point_value_rp' => 'required|integer|min:1',
+            'badge_color' => 'nullable|string|max:20',
+            'perks' => 'nullable|string|max:500',
+        ]);
+
+        $validated['badge_color'] = $validated['badge_color'] ?? 'slate';
+
+        if ($request->has('is_default') && $request->input('is_default')) {
+            LoyaltyTier::where('id', '!=', $tier->id)->update(['is_default' => false]);
+            $validated['is_default'] = true;
+        }
+
+        $oldName = $tier->name;
+        $tier->update($validated);
+
+        // Sync customer records if tier name changed
+        if ($oldName !== $validated['name']) {
+            Customer::where('tier', $oldName)->update(['tier' => $validated['name']]);
+        }
+
+        return redirect()->route('loyalty.index', ['tab' => 'tiers'])
+                         ->with('success', "Tier '{$validated['name']}' berhasil diperbarui!");
+    }
+
+    /**
+     * Delete a Loyalty Tier
+     */
+    public function destroyTier(LoyaltyTier $tier)
+    {
+        if ($tier->is_default) {
+            return back()->with('error', 'Tier default tidak dapat dihapus!');
+        }
+
+        $fallbackTier = LoyaltyTier::where('is_default', true)->first()
+            ?? LoyaltyTier::where('id', '!=', $tier->id)->orderBy('level')->first();
+
+        if ($fallbackTier) {
+            Customer::where('tier', $tier->name)->update(['tier' => $fallbackTier->name]);
+        }
+
+        $name = $tier->name;
+        $tier->delete();
+
+        return redirect()->route('loyalty.index', ['tab' => 'tiers'])
+                         ->with('success', "Tier '{$name}' berhasil dihapus! Member dialihkan ke {$fallbackTier?->name}.");
+    }
+
+    /**
+     * Update Category Point Rules and Welcome Bonus
+     */
+    public function updateCategoryRules(Request $request)
+    {
+        $rules = $request->input('rules', []);
+        foreach ($rules as $catName => $ruleData) {
+            LoyaltyCategoryRule::updateOrCreate(
+                ['category_name' => $catName],
+                [
+                    'spend_per_point' => max(1000, (int) ($ruleData['spend_per_point'] ?? 10000)),
+                    'is_active' => !empty($ruleData['is_active']),
+                ]
+            );
+        }
+
+        // Add new category rule if submitted
+        if ($request->filled('new_category_name')) {
+            LoyaltyCategoryRule::updateOrCreate(
+                ['category_name' => trim($request->new_category_name)],
+                [
+                    'spend_per_point' => max(1000, (int) $request->input('new_spend_per_point', 10000)),
+                    'is_active' => true,
+                ]
+            );
+        }
+
+        // Update welcome bonus
+        if ($request->has('welcome_bonus')) {
+            Setting::updateOrCreate(
+                ['type' => 'loyalty_welcome_bonus'],
+                ['value' => (string) max(0, (int) $request->input('welcome_bonus', 50))]
+            );
+        }
+
+        return redirect()->route('loyalty.index', ['tab' => 'tiers'])
+                         ->with('success', 'Aturan perolehan poin per kategori barang berhasil diperbarui!');
     }
 
     /**
@@ -146,26 +209,25 @@ class LoyaltyCardController extends Controller
             $q->latest()->take(10);
         }])->where('card_token', $cardToken)->firstOrFail();
 
-        $tierConfig = static::getTierConfig();
-        $targetCloud = $tierConfig['cloud_chaser']['min_spend'] ?? 1500000;
-        $targetMaster = $tierConfig['master']['min_spend'] ?? 3500000;
+        $tiers = LoyaltyTier::orderBy('level')->get();
+        $currentTierModel = $customer->getTierModel();
 
         // Calculate next tier target
-        $nextTier = null;
+        $nextTierModel = null;
+        if ($currentTierModel) {
+            $nextTierModel = $tiers->firstWhere('level', '>', $currentTierModel->level);
+        }
+
+        $nextTier = $nextTierModel ? $nextTierModel->name : null;
         $amountToNextTier = 0;
         $tierProgressPercent = 100;
 
-        if ($customer->tier === 'Rookie') {
-            $nextTier = 'Cloud Chaser';
-            $amountToNextTier = max(0, $targetCloud - (float) $customer->total_spent);
-            $tierProgressPercent = min(100, round(($customer->total_spent / max(1, $targetCloud)) * 100));
-        } elseif ($customer->tier === 'Cloud Chaser') {
-            $nextTier = 'Master';
-            $amountToNextTier = max(0, $targetMaster - (float) $customer->total_spent);
-            $tierProgressPercent = min(100, round(($customer->total_spent / max(1, $targetMaster)) * 100));
+        if ($nextTierModel && (float) $nextTierModel->min_spend > 0) {
+            $amountToNextTier = max(0, (float) $nextTierModel->min_spend - (float) $customer->total_spent);
+            $tierProgressPercent = min(100, round(($customer->total_spent / (float) $nextTierModel->min_spend) * 100));
         }
 
-        return view('loyalty.card', compact('customer', 'nextTier', 'amountToNextTier', 'tierProgressPercent'));
+        return view('loyalty.card', compact('customer', 'nextTier', 'nextTierModel', 'amountToNextTier', 'tierProgressPercent', 'currentTierModel'));
     }
 
     /**
@@ -206,8 +268,9 @@ class LoyaltyCardController extends Controller
 
         if ($action === 'redeem_points') {
             $points = (int) $request->input('points', 0);
-            $tierConfig = static::getTierConfig();
-            $pointValueRp = $tierConfig['rules']['point_value_rp'] ?? 100;
+            $tierModel = $customer->getTierModel();
+            $pointValueRp = $tierModel ? $tierModel->point_value_rp : 100;
+
             if ($customer->redeemPoints($points, null, "Penukaran Poin Diskon di Kasir")) {
                 $potongan = number_format($points * $pointValueRp, 0, ',', '.');
                 return back()->with('success', "Berhasil menukar {$points} poin (Diskon Rp {$potongan})!");
@@ -244,8 +307,10 @@ class LoyaltyCardController extends Controller
             return response()->json(['found' => false, 'message' => 'Pelanggan tidak ditemukan']);
         }
 
-        $tierConfig = static::getTierConfig();
-        $pointValueRp = $tierConfig['rules']['point_value_rp'] ?? 100;
+        $tierModel = $customer->getTierModel();
+        $pointValueRp = $tierModel ? $tierModel->point_value_rp : 100;
+        $discountPercent = $tierModel ? $tierModel->discount_percent : 0;
+        $pointMultiplier = $tierModel ? $tierModel->point_multiplier : 1.0;
 
         return response()->json([
             'found' => true,
@@ -255,6 +320,9 @@ class LoyaltyCardController extends Controller
                 'phone' => $customer->phone,
                 'member_code' => $customer->member_code,
                 'tier' => $customer->tier,
+                'tier_badge_color' => $tierModel?->badge_color ?? 'emerald',
+                'tier_discount_percent' => $discountPercent,
+                'tier_multiplier' => $pointMultiplier,
                 'points' => $customer->points,
                 'points_value_rp' => $customer->points * $pointValueRp,
                 'liquid_stamp_count' => $customer->liquid_stamp_count,
@@ -266,7 +334,7 @@ class LoyaltyCardController extends Controller
     }
 
     /**
-     * Fast registration for new customer at cashier (Without Rasa Favorit)
+     * Fast registration for new customer at cashier
      */
     public function registerFast(Request $request)
     {
@@ -306,14 +374,17 @@ class LoyaltyCardController extends Controller
                              ->with('new_member_whatsapp', $existing->whatsapp_share_url);
         }
 
-        $tierConfig = static::getTierConfig();
-        $welcomeBonus = (int) ($tierConfig['rules']['welcome_bonus'] ?? 50);
+        $welcomeBonusSetting = Setting::withoutGlobalScopes()->where('type', 'loyalty_welcome_bonus')->first();
+        $welcomeBonus = $welcomeBonusSetting ? (int) $welcomeBonusSetting->value : 50;
+
+        $defaultTier = LoyaltyTier::where('is_default', true)->first();
+        $initialTier = $defaultTier ? $defaultTier->name : 'Essential';
 
         try {
             $customer = Customer::create([
                 'name' => trim($request->name),
                 'phone' => $phone,
-                'tier' => 'Rookie',
+                'tier' => $initialTier,
                 'points' => $welcomeBonus,
                 'store_id' => session('active_store_id'),
             ]);

@@ -48,7 +48,10 @@ Route::get('/storage/{path}', function (string $path) {
 Route::get('/loyalty', [\App\Http\Controllers\LoyaltyCardController::class, 'index'])->name('loyalty.index');
 Route::get('/card/{token}', [\App\Http\Controllers\LoyaltyCardController::class, 'show'])->name('loyalty.card');
 Route::post('/customers/{customer}/action', [\App\Http\Controllers\LoyaltyCardController::class, 'quickAction'])->name('loyalty.action');
-Route::post('/loyalty/tiers', [\App\Http\Controllers\LoyaltyCardController::class, 'updateTiers'])->name('loyalty.tiers.update');
+Route::post('/loyalty/tiers', [\App\Http\Controllers\LoyaltyCardController::class, 'storeTier'])->name('loyalty.tiers.store');
+Route::put('/loyalty/tiers/{tier}', [\App\Http\Controllers\LoyaltyCardController::class, 'updateTier'])->name('loyalty.tiers.update');
+Route::delete('/loyalty/tiers/{tier}', [\App\Http\Controllers\LoyaltyCardController::class, 'destroyTier'])->name('loyalty.tiers.destroy');
+Route::post('/loyalty/category-rules', [\App\Http\Controllers\LoyaltyCardController::class, 'updateCategoryRules'])->name('loyalty.category-rules.update');
 Route::get('/api/loyalty/search', [\App\Http\Controllers\LoyaltyCardController::class, 'search'])->name('loyalty.search');
 Route::post('/api/loyalty/register', [\App\Http\Controllers\LoyaltyCardController::class, 'registerFast'])->name('loyalty.register');
 

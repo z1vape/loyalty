@@ -239,7 +239,8 @@ class SaleController extends Controller
         Gate::authorize('Sales Create');
 
         $products = Product::where('stock', '>', 0)->orderBy('name')->get();
-        return view('sales.create', compact('products'));
+        $categoryPointRules = \App\Models\LoyaltyCategoryRule::where('is_active', true)->pluck('spend_per_point', 'category_name');
+        return view('sales.create', compact('products', 'categoryPointRules'));
     }
 
     public function store(StoreSaleRequest $request)
@@ -290,7 +291,12 @@ class SaleController extends Controller
             $customerName = $customer ? $customer->name : ($validated['customer_name'] ?? null);
             $pointsRedeemed = (int) ($request->input('points_redeemed', 0));
             $pointsDiscount = (float) ($request->input('points_discount_amount', 0));
-            $pointsEarned = $customer ? (int) floor($validated['total_amount'] / 10000) : 0; // 1 Poin per Rp 10.000
+
+            // Load Category Point Rules & Customer Tier Multiplier
+            $categoryRules = \App\Models\LoyaltyCategoryRule::where('is_active', true)->get()->keyBy(fn($r) => strtolower(trim($r->category_name)));
+            $tierModel = $customer?->getTierModel();
+            $tierMultiplier = $tierModel ? (float) $tierModel->point_multiplier : 1.0;
+            $totalRawPointsEarned = 0;
 
             // Create Sale
             $sale = Sale::create([
@@ -299,7 +305,7 @@ class SaleController extends Controller
                 'customer_id' => $customer?->id,
                 'customer_name' => $customerName,
                 'total_amount' => $validated['total_amount'],
-                'points_earned' => $pointsEarned,
+                'points_earned' => 0, // Will be updated after item category points calculated
                 'points_redeemed' => $pointsRedeemed,
                 'points_discount_amount' => $pointsDiscount,
                 'liquid_stamps_earned' => 0, // Will be updated if liquid items exist
@@ -334,6 +340,17 @@ class SaleController extends Controller
                     $liquidBottlesCount += (int) $itemData['quantity'];
                 }
 
+                // Calculate Category Points for this item
+                if ($customer) {
+                    $catKey = strtolower(trim($product->category ?? ''));
+                    $rule = $categoryRules->get($catKey);
+                    $spendPerPoint = ($rule && $rule->spend_per_point > 0) ? $rule->spend_per_point : 10000;
+                    if ($rule === null || $rule->is_active) {
+                        $rawPointsForItem = floor((float) $itemData['subtotal'] / $spendPerPoint);
+                        $totalRawPointsEarned += $rawPointsForItem;
+                    }
+                }
+
                 // 1. Create Sale Item
                 $sale->items()->create([
                     'product_id' => $product->id,
@@ -366,11 +383,14 @@ class SaleController extends Controller
 
             // Process Customer Loyalty Rewards & Points
             if ($customer) {
+                $pointsEarned = (int) round($totalRawPointsEarned * $tierMultiplier);
+                $sale->update(['points_earned' => $pointsEarned]);
+
                 if ($pointsRedeemed > 0) {
                     $customer->redeemPoints($pointsRedeemed, $sale->id, "Tukar {$pointsRedeemed} Poin di Transaksi {$refNumber}");
                 }
                 if ($pointsEarned > 0) {
-                    $customer->addPoints($pointsEarned, $sale->id, "Poin Belanja Transaksi {$refNumber}");
+                    $customer->addPoints($pointsEarned, $sale->id, "Poin Belanja Transaksi {$refNumber} ({$customer->tier} {$tierMultiplier}x)");
                 }
                 if ($liquidBottlesCount > 0) {
                     $customer->addStamps($liquidBottlesCount, $sale->id, "Stempel {$liquidBottlesCount}x Liquid di Transaksi {$refNumber}");

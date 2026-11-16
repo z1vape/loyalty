@@ -48,53 +48,31 @@
             background: #94a3b8;
         }
 
-        /* HR-style Minimized Sidebar (Rail Mode) */
+        /* Sidebar Minimized Mode Styling (Persis Human Resources) */
         #loyalty-sidebar.is-minimized {
-            width: 4.25rem !important; /* 68px */
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            width: 4.75rem !important; /* 76px */
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
         }
-
-        #loyalty-sidebar.is-minimized #sidebar-brand-box {
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            text-align: center !important;
-        }
-
-        #loyalty-sidebar.is-minimized .sidebar-brand-text {
+        #loyalty-sidebar.is-minimized .sidebar-brand-text,
+        #loyalty-sidebar.is-minimized .loy-section-title,
+        #loyalty-sidebar.is-minimized .loy-nav-text,
+        #loyalty-sidebar.is-minimized .loy-toggle-label,
+        #loyalty-sidebar.is-minimized .loy-portal-label,
+        #loyalty-sidebar.is-minimized .loy-badge-pill {
             display: none !important;
         }
-
         #loyalty-sidebar.is-minimized .sidebar-mini-text {
             display: block !important;
         }
-
-        #loyalty-sidebar.is-minimized .loy-nav-text,
-        #loyalty-sidebar.is-minimized .loy-section-title,
-        #loyalty-sidebar.is-minimized .loy-toggle-label,
-        #loyalty-sidebar.is-minimized .loy-portal-label {
-            display: none !important;
-        }
-
         #loyalty-sidebar.is-minimized .loy-section-divider {
             display: block !important;
         }
-
         #loyalty-sidebar.is-minimized .loy-nav-item {
             justify-content: center !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            width: 2.75rem !important;
-            height: 2.5rem !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
         }
-
-        #loyalty-sidebar.is-minimized .loy-footer-box {
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-        }
-
         #loyalty-sidebar.is-minimized .loy-toggle-icon {
             transform: rotate(180deg);
         }
@@ -129,9 +107,14 @@
 
                 {{-- Member Loyalty (Daftar) --}}
                 <button type="button" onclick="switchTab('members')" id="nav-btn-members" title="Daftar Member"
-                    class="loy-nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all cursor-pointer {{ $activeTab === 'members' ? 'bg-[#5cf3b3] text-[#004d34] font-extrabold shadow-2xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium' }}">
-                    <span class="material-symbols-outlined text-[19px] shrink-0">how_to_reg</span>
-                    <span class="truncate loy-nav-text">Daftar Member</span>
+                    class="loy-nav-item w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all cursor-pointer {{ $activeTab === 'members' ? 'bg-[#5cf3b3] text-[#004d34] font-extrabold shadow-2xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium' }}">
+                    <span class="flex items-center gap-2.5">
+                        <span class="material-symbols-outlined text-[19px] shrink-0">how_to_reg</span>
+                        <span class="truncate loy-nav-text">Daftar Member</span>
+                    </span>
+                    <span class="loy-badge-pill px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                        {{ $totalCustomers }}
+                    </span>
                 </button>
 
                 {{-- Registrasi Member Baru (Modal Quick Access) --}}
@@ -147,9 +130,14 @@
 
                 {{-- Tier & Poin --}}
                 <button type="button" onclick="switchTab('tiers')" id="nav-btn-tiers" title="Pengaturan Tier & Poin"
-                    class="loy-nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all cursor-pointer {{ $activeTab === 'tiers' ? 'bg-[#5cf3b3] text-[#004d34] font-extrabold shadow-2xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium' }}">
-                    <span class="material-symbols-outlined text-[19px] shrink-0">military_tech</span>
-                    <span class="truncate loy-nav-text">Tier &amp; Poin</span>
+                    class="loy-nav-item w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all cursor-pointer {{ $activeTab === 'tiers' ? 'bg-[#5cf3b3] text-[#004d34] font-extrabold shadow-2xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium' }}">
+                    <span class="flex items-center gap-2.5">
+                        <span class="material-symbols-outlined text-[19px] shrink-0">military_tech</span>
+                        <span class="truncate loy-nav-text">Tier &amp; Poin</span>
+                    </span>
+                    <span class="loy-badge-pill px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                        {{ $tiers->count() }} Tier
+                    </span>
                 </button>
             </nav>
         </div>
@@ -182,7 +170,7 @@
                     {{ $activeTab === 'tiers' ? 'Pengaturan Tier & Poin Member' : ($activeTab === 'members' ? 'Daftar Member Loyalty' : 'Dashboard Scanner Kasir') }}
                 </h2>
                 <p class="text-xs text-slate-500" id="topbar-subtitle">
-                    {{ $activeTab === 'tiers' ? 'Kelola ambang batas pembelanjaan, perolehan poin, dan benefit setiap tier member' : ($activeTab === 'members' ? 'Kelola data pelanggan, pantau level tier, riwayat kartu, dan poin belanja' : 'Scan barcode / QR Code pelanggan atau cari berdasarkan nomor WhatsApp') }}
+                    {{ $activeTab === 'tiers' ? 'Kelola level tier, aturan perolehan poin per kategori barang, dan diskon belanja member' : ($activeTab === 'members' ? 'Kelola data pelanggan, pantau level tier, riwayat kartu, dan poin belanja' : 'Scan barcode / QR Code pelanggan atau cari berdasarkan nomor WhatsApp') }}
                 </p>
             </div>
 
@@ -249,57 +237,62 @@
                         <div class="relative flex items-center mt-5 max-w-xl mx-auto">
                             <span class="material-symbols-outlined absolute left-4 text-slate-400 text-xl pointer-events-none">qr_code_scanner</span>
                             <input type="text" id="live_scanner_input" autofocus placeholder="Scan QR atau ketik: VP-XXXXX / 08123..."
-                                class="w-full pl-11 pr-24 py-3.5 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-[#006c49] focus:ring-2 focus:ring-emerald-100 text-sm rounded-xl transition-all font-mono text-slate-800 placeholder:text-slate-400 shadow-inner"
-                                onkeydown="if(event.key === 'Enter'){ event.preventDefault(); doLiveSearch(); }" />
-                            <button type="button" onclick="doLiveSearch()" class="absolute right-2 px-5 py-2 bg-[#006c49] hover:bg-[#005a3c] text-white font-bold text-xs rounded-lg transition shadow-xs cursor-pointer">
+                                onkeydown="if(event.key === 'Enter'){ event.preventDefault(); doLiveSearch(); }"
+                                class="w-full pl-12 pr-28 py-3.5 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border-2 border-emerald-300 focus:border-[#006c49] focus:ring-4 focus:ring-emerald-100 rounded-2xl text-sm font-mono text-slate-900 transition tracking-wide placeholder:text-slate-400" />
+                            <button type="button" onclick="doLiveSearch()" class="absolute right-2 px-5 py-2 rounded-xl bg-[#006c49] hover:bg-[#005a3c] text-white text-xs font-bold transition shadow-xs cursor-pointer">
                                 CARI
                             </button>
                         </div>
                     </div>
 
-                    {{-- Live Result Box (AJAX Member Card Preview) --}}
-                    <div id="scan_result_box" class="hidden mt-8 pt-6 border-t border-slate-200 max-w-xl mx-auto">
-                        <div class="p-5 rounded-2xl bg-slate-50 border border-emerald-300 relative shadow-xs">
-                            <button onclick="closeScanResult()" class="absolute right-3 top-3 text-slate-400 hover:text-slate-700 p-1 rounded-md hover:bg-slate-200/60 transition cursor-pointer">
-                                <span class="material-symbols-outlined text-[18px]">close</span>
-                            </button>
-
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <span class="text-xs font-mono font-bold text-[#006c49] bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-200" id="res_member_code"></span>
-                                    <h3 class="text-base font-bold text-slate-900 mt-1.5" id="res_name"></h3>
-                                    <p class="text-xs text-slate-500 font-mono" id="res_phone"></p>
+                    {{-- Dynamic Live Scanned Customer Box --}}
+                    <div id="scan_result_box" class="mt-8 pt-6 border-t border-slate-200 hidden">
+                        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-2xs">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-xl bg-emerald-100 text-[#006c49] flex items-center justify-center font-bold text-lg font-mono" id="res_avatar">
+                                        ★
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <h3 class="font-extrabold text-base text-slate-900" id="res_name"></h3>
+                                            <span id="res_tier_badge" class="px-2.5 py-0.5 rounded text-[10px] font-bold"></span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 font-mono mt-0.5">
+                                            <span id="res_member_code" class="text-[#006c49] font-bold"></span> • <span id="res_phone"></span>
+                                        </p>
+                                    </div>
                                 </div>
-                                <span id="res_tier_badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase"></span>
+                                <button type="button" onclick="closeScanResult()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                                    <span class="material-symbols-outlined text-sm">close</span>
+                                </button>
                             </div>
 
-                            <div class="my-3.5 bg-white p-3.5 rounded-xl border border-slate-200 flex items-center justify-between">
-                                <div>
-                                    <span class="text-[10px] text-slate-500 uppercase font-semibold block">Poin Belanja</span>
-                                    <span class="text-xl font-bold text-amber-600 font-mono" id="res_points"></span>
+                            <div class="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-slate-200 text-xs">
+                                <div class="bg-white p-3 rounded-xl border border-slate-200/70">
+                                    <span class="text-[11px] text-slate-500 font-medium block">Saldo Poin Belanja</span>
+                                    <span class="text-lg font-extrabold text-amber-600 font-mono" id="res_points">0 Poin</span>
+                                    <span class="text-[10px] text-slate-400 block mt-0.5" id="res_points_rp">≈ Rp 0</span>
                                 </div>
-                                <div class="text-right">
-                                    <span class="text-[10px] text-slate-500 uppercase font-semibold block">Nilai Diskon</span>
-                                    <span class="text-sm font-bold text-slate-700 font-mono" id="res_points_rp"></span>
+                                <div class="bg-white p-3 rounded-xl border border-slate-200/70">
+                                    <span class="text-[11px] text-slate-500 font-medium block">Aksi Cepat Kasir</span>
+                                    <div class="flex gap-2 mt-1">
+                                        <button type="button" onclick="promptAddPoints()" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-[#006c49] font-bold text-xs border border-emerald-200 hover:bg-emerald-100 transition">
+                                            + Poin
+                                        </button>
+                                        <button type="button" onclick="promptRedeemPoints()" class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200 hover:bg-rose-100 transition">
+                                            - Tukar Poin
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
-                            {{-- Fast Action Buttons in Scan Result --}}
-                            <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-200">
-                                <button onclick="promptAddPoints()" class="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 text-xs font-semibold flex items-center gap-1 transition cursor-pointer">
-                                    ⭐ + Poin Belanja
-                                </button>
-
-                                <button onclick="promptRedeemPoints()" class="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100 text-xs font-semibold flex items-center gap-1 transition cursor-pointer">
-                                    ✂️ Tukar Poin Diskon
-                                </button>
-
-                                <a id="res_card_url" href="#" target="_blank" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold flex items-center gap-1 transition no-underline">
-                                    👁️ Buka Kartu Digital
+                            <div class="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
+                                <a id="res_card_url" href="#" target="_blank" class="text-[#006c49] hover:underline font-bold flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">open_in_new</span> Buka Kartu Digital
                                 </a>
-
-                                <a id="res_wa_url" href="#" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-50 text-[#006c49] border border-emerald-200 hover:bg-emerald-100 text-xs font-semibold flex items-center gap-1 transition no-underline">
-                                    📲 Kirim Link WA
+                                <a id="res_wa_url" href="#" target="_blank" class="text-emerald-600 hover:underline font-bold flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">send</span> Kirim Kartu ke WA
                                 </a>
                             </div>
                         </div>
@@ -307,44 +300,32 @@
                 </div>
             </section>
 
-            {{-- ==================== TAB 2: MEMBER LOYALTY (DAFTAR & CREATE) ==================== --}}
-            <section id="tab-members" class="tab-pane {{ $activeTab === 'members' ? '' : 'hidden' }}">
+            {{-- ==================== TAB 2: DAFTAR MEMBER ==================== --}}
+            <section id="tab-members" class="tab-pane {{ $activeTab === 'members' ? '' : 'hidden' }} space-y-6">
                 <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
-                    <div class="p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200/80">
+                    {{-- Header & Search Bar --}}
+                    <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
-                            <h3 class="text-base font-bold text-slate-900">Daftar Member Loyalty</h3>
-                            <p class="text-xs text-slate-500 mt-0.5">Total {{ $customers->total() }} pelanggan terdaftar</p>
+                            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Daftar Member Loyalty Terdaftar</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Total {{ $customers->total() }} pelanggan aktif memiliki kartu digital</p>
                         </div>
-
-                        {{-- Search Filter & Actions --}}
-                        <div class="flex items-center gap-2">
-                            <form action="{{ route('loyalty.index') }}" method="GET" class="flex gap-2">
-                                <input type="hidden" name="tab" value="members" />
-                                <div class="relative">
-                                    <span class="material-symbols-outlined absolute left-3 top-2 text-slate-400 text-sm">search</span>
-                                    <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama / no WA / kode..."
-                                        class="pl-9 pr-3.5 py-1.5 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-[#006c49] focus:ring-1 focus:ring-emerald-200 transition" />
-                                </div>
-                                <button type="submit" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-semibold rounded-xl transition cursor-pointer">
-                                    Filter
-                                </button>
-                                @if($search)
-                                    <a href="{{ route('loyalty.index', ['tab' => 'members']) }}" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-xl transition no-underline">
-                                        Reset
-                                    </a>
-                                @endif
-                            </form>
-
-                            <button onclick="openRegisterModal()" class="px-3.5 py-1.5 rounded-xl bg-[#006c49] hover:bg-[#005a3c] text-white text-xs font-bold shadow-xs flex items-center gap-1 transition cursor-pointer">
-                                <span class="material-symbols-outlined text-[16px]">person_add</span>
-                                <span>+ Member Baru</span>
+                        <form method="GET" action="{{ route('loyalty.index') }}" class="flex items-center gap-2">
+                            <input type="hidden" name="tab" value="members">
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-sm">search</span>
+                                <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama / no WA / kode..."
+                                    class="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#006c49] rounded-xl text-xs text-slate-800 w-56 transition font-medium" />
+                            </div>
+                            <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+                                Filter
                             </button>
-                        </div>
+                        </form>
                     </div>
 
+                    {{-- Table --}}
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50/80 text-slate-500 font-semibold uppercase text-[11px] tracking-wider border-b border-slate-200">
+                            <thead class="bg-slate-50/80 text-slate-500 font-semibold border-b border-slate-200 text-[11px] uppercase tracking-wider">
                                 <tr>
                                     <th class="py-3.5 px-4">Nama Pelanggan</th>
                                     <th class="py-3.5 px-4">No. Member</th>
@@ -356,6 +337,20 @@
                             </thead>
                             <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                                 @forelse($customers as $c)
+                                    @php
+                                        $tierModel = $c->getTierModel();
+                                        $badgeColor = $tierModel?->badge_color ?? 'slate';
+                                        $colorClasses = [
+                                            'slate' => 'bg-slate-100 text-slate-700 border-slate-200',
+                                            'emerald' => 'bg-emerald-50 text-[#006c49] border-emerald-200',
+                                            'cyan' => 'bg-sky-50 text-sky-700 border-sky-200',
+                                            'amber' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                            'purple' => 'bg-purple-50 text-purple-700 border-purple-200',
+                                            'rose' => 'bg-rose-50 text-rose-700 border-rose-200',
+                                        ];
+                                        $badgeClass = $colorClasses[$badgeColor] ?? 'bg-slate-100 text-slate-700 border-slate-200';
+                                        $pointRate = $tierModel ? $tierModel->point_value_rp : 100;
+                                    @endphp
                                     <tr class="hover:bg-slate-50/70 transition-colors">
                                         <td class="py-3.5 px-4">
                                             <div class="font-bold text-slate-900 text-sm">{{ $c->name }}</div>
@@ -367,26 +362,16 @@
                                             </span>
                                         </td>
                                         <td class="py-3.5 px-4">
-                                            @if($c->tier === 'Master')
-                                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                                                    ★ MASTER
-                                                </span>
-                                            @elseif($c->tier === 'Cloud Chaser')
-                                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
-                                                    ⚡ CLOUD CHASER
-                                                </span>
-                                            @else
-                                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-[#006c49] border border-emerald-200">
-                                                    🌿 ROOKIE
-                                                </span>
-                                            @endif
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $badgeClass }}">
+                                                ★ {{ strtoupper($c->tier) }}
+                                            </span>
                                         </td>
                                         <td class="py-3.5 px-4">
                                             <span class="font-mono font-bold text-slate-800 text-xs">Rp {{ number_format($c->total_spent ?? 0, 0, ',', '.') }}</span>
                                         </td>
                                         <td class="py-3.5 px-4">
                                             <span class="font-mono font-bold text-amber-600 text-sm">{{ number_format($c->points) }} Pts</span>
-                                            <span class="text-[10px] text-slate-400 block">≈ Rp {{ number_format($c->points * ($tierConfig['rules']['point_value_rp'] ?? 100), 0, ',', '.') }}</span>
+                                            <span class="text-[10px] text-slate-400 block">≈ Rp {{ number_format($c->points * $pointRate, 0, ',', '.') }}</span>
                                         </td>
                                         <td class="py-3.5 px-4 text-right">
                                             <div class="flex items-center justify-end gap-1.5">
@@ -424,184 +409,476 @@
             {{-- ==================== TAB 3: TIER (PENGATURAN TIER & POIN) ==================== --}}
             <section id="tab-tiers" class="tab-pane {{ $activeTab === 'tiers' ? '' : 'hidden' }} space-y-6">
 
-                {{-- Visual Cards: 3 Tiers Distribution --}}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {{-- 1. Rookie --}}
-                    <div class="bg-white rounded-2xl border border-emerald-200 p-5 shadow-2xs relative overflow-hidden">
-                        <div class="flex items-center justify-between">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-[#006c49] border border-emerald-200">
-                                🌿 ROOKIE
-                            </span>
-                            <span class="text-xs text-slate-400 font-semibold">Tier 1</span>
-                        </div>
-                        <div class="mt-4">
-                            <div class="text-2xl font-extrabold text-slate-900">{{ number_format($tierCounts['Rookie'] ?? 0) }} Member</div>
-                            <p class="text-xs text-slate-500 mt-0.5">
-                                {{ round((($tierCounts['Rookie'] ?? 0) / $totalCustomers) * 100) }}% dari total member
+                {{-- SECTION 1: DAFTAR TIER (LIST COLUMN TABLE DENGAN CRUD) --}}
+                <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+                    {{-- Header Bar --}}
+                    <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[#006c49] text-[22px]">military_tech</span>
+                                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Daftar &amp; Level Tier Member</h3>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    {{ $tiers->count() }} Tier Terdaftar
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Kelola level tier pembelanjaan, multiplier poin, potongan belanja member, dan benefit. Kenaikan tier member dihitung otomatis saat transaksi POS selesai.
                             </p>
                         </div>
-                        <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 space-y-1">
-                            <div>Min. Belanja: <strong class="text-slate-900 font-mono">Rp {{ number_format($tierConfig['rookie']['min_spend'] ?? 0, 0, ',', '.') }}</strong></div>
-                            <div>Multiplier Poin: <strong class="text-[#006c49] font-mono">{{ $tierConfig['rookie']['point_multiplier'] ?? 1 }}x</strong></div>
+                        <div>
+                            <button type="button" onclick="openCreateTierModal()" class="px-4 py-2 rounded-xl bg-[#006c49] hover:bg-[#005a3c] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
+                                <span class="material-symbols-outlined text-[16px]">add</span>
+                                <span>+ TAMBAH TIER BARU</span>
+                            </button>
                         </div>
                     </div>
 
-                    {{-- 2. Cloud Chaser --}}
-                    <div class="bg-white rounded-2xl border border-sky-200 p-5 shadow-2xs relative overflow-hidden">
-                        <div class="flex items-center justify-between">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
-                                ⚡ CLOUD CHASER
-                            </span>
-                            <span class="text-xs text-slate-400 font-semibold">Tier 2</span>
-                        </div>
-                        <div class="mt-4">
-                            <div class="text-2xl font-extrabold text-slate-900">{{ number_format($tierCounts['Cloud Chaser'] ?? 0) }} Member</div>
-                            <p class="text-xs text-slate-500 mt-0.5">
-                                {{ round((($tierCounts['Cloud Chaser'] ?? 0) / $totalCustomers) * 100) }}% dari total member
-                            </p>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 space-y-1">
-                            <div>Min. Belanja: <strong class="text-slate-900 font-mono">Rp {{ number_format($tierConfig['cloud_chaser']['min_spend'] ?? 1500000, 0, ',', '.') }}</strong></div>
-                            <div>Multiplier Poin: <strong class="text-sky-600 font-mono">{{ $tierConfig['cloud_chaser']['point_multiplier'] ?? 1.25 }}x</strong></div>
-                        </div>
-                    </div>
+                    {{-- Table List Column --}}
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50/80 text-slate-500 font-semibold border-b border-slate-200 text-[11px] uppercase tracking-wider">
+                                <tr>
+                                    <th class="py-3.5 px-4 w-16 text-center">Level</th>
+                                    <th class="py-3.5 px-4">Nama &amp; Badge Tier</th>
+                                    <th class="py-3.5 px-4">Min. Belanja</th>
+                                    <th class="py-3.5 px-4">Multiplier Poin</th>
+                                    <th class="py-3.5 px-4">Diskon Belanja</th>
+                                    <th class="py-3.5 px-4">Nilai Tukar Poin</th>
+                                    <th class="py-3.5 px-4">Total Member</th>
+                                    <th class="py-3.5 px-4">Benefit / Perks</th>
+                                    <th class="py-3.5 px-4 text-right w-24">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                                @forelse($tiers as $tier)
+                                    @php
+                                        $colorMap = [
+                                            'slate' => 'bg-slate-100 text-slate-700 border-slate-300',
+                                            'emerald' => 'bg-emerald-50 text-[#006c49] border-emerald-300',
+                                            'cyan' => 'bg-sky-50 text-sky-700 border-sky-300',
+                                            'amber' => 'bg-amber-50 text-amber-700 border-amber-300',
+                                            'purple' => 'bg-purple-50 text-purple-700 border-purple-300',
+                                            'rose' => 'bg-rose-50 text-rose-700 border-rose-300',
+                                        ];
+                                        $badgeColorClass = $colorMap[$tier->badge_color] ?? $colorMap['slate'];
+                                    @endphp
+                                    <tr class="hover:bg-slate-50/70 transition-colors">
+                                        <td class="py-3.5 px-4 text-center">
+                                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-slate-700 font-bold font-mono text-xs border border-slate-200">
+                                                {{ $tier->level }}
+                                            </span>
+                                        </td>
+                                        <td class="py-3.5 px-4">
+                                            <div class="flex items-center gap-2">
+                                                <span class="px-2.5 py-1 rounded-full text-xs font-bold border {{ $badgeColorClass }}">
+                                                    ★ {{ strtoupper($tier->name) }}
+                                                </span>
+                                                @if($tier->is_default)
+                                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-[#004d34] border border-emerald-200">
+                                                        Default
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="py-3.5 px-4">
+                                            <span class="font-mono font-bold text-slate-900 text-xs">
+                                                Rp {{ number_format($tier->min_spend, 0, ',', '.') }}
+                                            </span>
+                                            <span class="text-[10px] text-slate-400 block">Akumulasi belanja</span>
+                                        </td>
+                                        <td class="py-3.5 px-4">
+                                            <span class="font-mono font-extrabold text-[#006c49] text-xs px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200">
+                                                {{ $tier->point_multiplier }}x
+                                            </span>
+                                        </td>
+                                        <td class="py-3.5 px-4">
+                                            @if($tier->discount_percent > 0)
+                                                <span class="font-mono font-bold text-indigo-700 text-xs px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200">
+                                                    {{ $tier->discount_percent }}%
+                                                </span>
+                                            @else
+                                                <span class="text-slate-400 text-xs font-mono">0%</span>
+                                            @endif
+                                        </td>
+                                        <td class="py-3.5 px-4">
+                                            <span class="font-mono font-semibold text-slate-800 text-xs">
+                                                Rp {{ number_format($tier->point_value_rp, 0, ',', '.') }}
+                                            </span>
+                                            <span class="text-[10px] text-slate-400 block">per 1 Poin</span>
+                                        </td>
+                                        <td class="py-3.5 px-4">
+                                            <span class="font-bold text-slate-900 font-mono text-xs">
+                                                {{ number_format($tier->customers_count ?? 0) }} Member
+                                            </span>
+                                            <span class="text-[10px] text-slate-400 block">
+                                                {{ round((($tier->customers_count ?? 0) / $totalCustomers) * 100) }}% total
+                                            </span>
+                                        </td>
+                                        <td class="py-3.5 px-4 max-w-xs">
+                                            <p class="text-xs text-slate-600 truncate" title="{{ $tier->perks }}">
+                                                {{ $tier->perks ?? '-' }}
+                                            </p>
+                                        </td>
+                                        <td class="py-3.5 px-4 text-right">
+                                            <div class="flex items-center justify-end gap-1">
+                                                <button type="button" onclick="openEditTierModal({{ json_encode($tier) }})" title="Edit Tier"
+                                                    class="p-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
+                                                    <span class="material-symbols-outlined text-[16px]">edit</span>
+                                                </button>
 
-                    {{-- 3. Master --}}
-                    <div class="bg-white rounded-2xl border border-purple-200 p-5 shadow-2xs relative overflow-hidden">
-                        <div class="flex items-center justify-between">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                                ★ MASTER
-                            </span>
-                            <span class="text-xs text-slate-400 font-semibold">Tier 3 (VIP)</span>
-                        </div>
-                        <div class="mt-4">
-                            <div class="text-2xl font-extrabold text-slate-900">{{ number_format($tierCounts['Master'] ?? 0) }} Member</div>
-                            <p class="text-xs text-slate-500 mt-0.5">
-                                {{ round((($tierCounts['Master'] ?? 0) / $totalCustomers) * 100) }}% dari total member
-                            </p>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 space-y-1">
-                            <div>Min. Belanja: <strong class="text-slate-900 font-mono">Rp {{ number_format($tierConfig['master']['min_spend'] ?? 3500000, 0, ',', '.') }}</strong></div>
-                            <div>Multiplier Poin: <strong class="text-purple-600 font-mono">{{ $tierConfig['master']['point_multiplier'] ?? 1.5 }}x</strong></div>
-                        </div>
+                                                @if(!$tier->is_default)
+                                                    <form action="{{ route('loyalty.tiers.destroy', $tier->id) }}" method="POST" class="inline"
+                                                        onsubmit="return confirm('Hapus tier {{ $tier->name }}? Member pada tier ini akan dialihkan ke tier default.')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" title="Hapus Tier"
+                                                            class="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition cursor-pointer">
+                                                            <span class="material-symbols-outlined text-[16px]">delete</span>
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <span class="p-1.5 text-slate-300 cursor-not-allowed" title="Tier default tidak dapat dihapus">
+                                                        <span class="material-symbols-outlined text-[16px]">lock</span>
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="9" class="py-10 text-center text-slate-400">
+                                            Belum ada tier yang dibuat. Klik "+ TAMBAH TIER BARU" untuk membuat tier pertama.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                {{-- Configuration Form --}}
-                <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-6">
-                    <form action="{{ route('loyalty.tiers.update') }}" method="POST" class="space-y-6">
+                {{-- SECTION 2: ATURAN POIN BERDASARKAN KATEGORI BARANG --}}
+                <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-6 space-y-6">
+                    <form action="{{ route('loyalty.category-rules.update') }}" method="POST" class="space-y-6">
                         @csrf
-                        <div>
-                            <h3 class="text-base font-bold text-slate-900">Konfigurasi Ambang Batas Pembelanjaan Tiap Tier</h3>
-                            <p class="text-xs text-slate-500 mt-0.5">Kenaikan tier pelanggan dihitung otomatis saat setiap transaksi POS selesai.</p>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {{-- Rookie Form --}}
-                            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                                <h4 class="font-bold text-xs uppercase tracking-wide text-emerald-800 flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Rookie (Starter)
-                                </h4>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Minimal Belanja (Rp)</label>
-                                    <input type="number" name="tier_rookie_min_spend" value="{{ $tierConfig['rookie']['min_spend'] ?? 0 }}" readonly
-                                        class="w-full px-3 py-2 bg-slate-200/70 border border-slate-300 rounded-lg text-xs font-mono text-slate-600 cursor-not-allowed" />
-                                    <span class="text-[10px] text-slate-400">Default untuk semua member baru</span>
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Multiplier Poin</label>
-                                    <input type="number" step="0.05" name="tier_rookie_multiplier" value="{{ $tierConfig['rookie']['point_multiplier'] ?? 1.0 }}"
-                                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49]" />
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Deskripsi Benefit</label>
-                                    <textarea name="tier_rookie_perks" rows="2" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:border-[#006c49]">{{ $tierConfig['rookie']['perks'] ?? 'Akses Member, Stempel Liquid & Tukar Poin Diskon' }}</textarea>
-                                </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[#006c49]">category</span>
+                                    Aturan Perolehan Poin per Kategori Barang
+                                </h3>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    Poin didapat dari pembelian barang berdasarkan kategori produk yang telah ada. Atur nominal belanja (Rp) yang dibutuhkan untuk mendapatkan 1 Poin pada setiap kategori.
+                                </p>
                             </div>
-
-                            {{-- Cloud Chaser Form --}}
-                            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                                <h4 class="font-bold text-xs uppercase tracking-wide text-sky-800 flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-sky-500"></span> Cloud Chaser
-                                </h4>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Minimal Belanja (Rp)</label>
-                                    <input type="number" step="100000" name="tier_cloud_min_spend" value="{{ $tierConfig['cloud_chaser']['min_spend'] ?? 1500000 }}"
-                                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49]" />
-                                    <span class="text-[10px] text-slate-400">Akumulasi total pembelanjaan</span>
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Multiplier Poin</label>
-                                    <input type="number" step="0.05" name="tier_cloud_multiplier" value="{{ $tierConfig['cloud_chaser']['point_multiplier'] ?? 1.25 }}"
-                                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49]" />
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Deskripsi Benefit</label>
-                                    <textarea name="tier_cloud_perks" rows="2" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:border-[#006c49]">{{ $tierConfig['cloud_chaser']['perks'] ?? 'Bonus Perolehan Poin 1.25x, Diskon Promo Bulanan' }}</textarea>
-                                </div>
-                            </div>
-
-                            {{-- Master Form --}}
-                            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                                <h4 class="font-bold text-xs uppercase tracking-wide text-purple-800 flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-purple-500"></span> Master (VIP)
-                                </h4>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Minimal Belanja (Rp)</label>
-                                    <input type="number" step="100000" name="tier_master_min_spend" value="{{ $tierConfig['master']['min_spend'] ?? 3500000 }}"
-                                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49]" />
-                                    <span class="text-[10px] text-slate-400">Akumulasi total pembelanjaan</span>
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Multiplier Poin</label>
-                                    <input type="number" step="0.05" name="tier_master_multiplier" value="{{ $tierConfig['master']['point_multiplier'] ?? 1.5 }}"
-                                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49]" />
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Deskripsi Benefit</label>
-                                    <textarea name="tier_master_perks" rows="2" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:border-[#006c49]">{{ $tierConfig['master']['perks'] ?? 'Bonus Perolehan Poin 1.5x, Antrean Kasir Prioritas & Merchandise' }}</textarea>
-                                </div>
+                            <div class="text-right">
+                                <button type="submit" class="px-4 py-2 rounded-xl bg-[#006c49] hover:bg-[#005a3c] text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer">
+                                    Simpan Semua Aturan
+                                </button>
                             </div>
                         </div>
 
-                        {{-- Aturan Poin --}}
-                        <div class="pt-5 border-t border-slate-200">
-                            <h4 class="font-bold text-xs uppercase tracking-wide text-slate-800 mb-3">Aturan Konversi &amp; Perolehan Poin Kasir</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Perolehan Poin (Rp per 1 Poin)</label>
-                                    <input type="number" step="1000" name="spend_per_point" value="{{ $tierConfig['rules']['spend_per_point'] ?? 10000 }}"
-                                        class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49]" />
-                                    <span class="text-[10px] text-slate-400 mt-1 block">Contoh: Rp 10.000 belanja = 1 Poin</span>
-                                </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 text-[11px] uppercase tracking-wider">
+                                    <tr>
+                                        <th class="py-3 px-4 w-20 text-center">Status</th>
+                                        <th class="py-3 px-4">Kategori Produk</th>
+                                        <th class="py-3 px-4 w-60">Nominal Belanja per 1 Poin (Rp)</th>
+                                        <th class="py-3 px-4">Simulasi Perolehan Poin Kasir</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                                    @php
+                                        $ruleMap = $categoryRules->keyBy(fn($r) => strtolower(trim($r->category_name)));
+                                    @endphp
+                                    @foreach($allCategories as $cat)
+                                        @php
+                                            $catKey = strtolower(trim($cat));
+                                            $rule = $ruleMap->get($catKey);
+                                            $isActive = $rule ? (bool)$rule->is_active : true;
+                                            $spendPerPoint = $rule ? $rule->spend_per_point : 10000;
+                                        @endphp
+                                        <tr class="hover:bg-slate-50/70 transition-colors">
+                                            <td class="py-3 px-4 text-center">
+                                                <input type="checkbox" name="rules[{{ $cat }}][is_active]" value="1" {{ $isActive ? 'checked' : '' }}
+                                                    class="rounded text-[#006c49] focus:ring-emerald-200 border-slate-300 cursor-pointer h-4 w-4" />
+                                            </td>
+                                            <td class="py-3 px-4 font-bold text-slate-900">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="w-2 h-2 rounded-full {{ $isActive ? 'bg-emerald-500' : 'bg-slate-300' }}"></span>
+                                                    <span>{{ $cat }}</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 px-4">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-xs text-slate-400 font-semibold">Rp</span>
+                                                    <input type="number" step="1000" min="1000" name="rules[{{ $cat }}][spend_per_point]" value="{{ $spendPerPoint }}"
+                                                        class="w-full px-3 py-1.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49]" />
+                                                </div>
+                                            </td>
+                                            <td class="py-3 px-4 text-slate-500 font-mono text-[11px]">
+                                                Belanja Rp 100.000 = <strong class="text-emerald-700">{{ floor(100000 / max(1, $spendPerPoint)) }} Poin</strong> dasar
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
 
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nilai Tukar Poin (Diskon Rp per 1 Poin)</label>
-                                    <input type="number" step="10" name="point_value_rp" value="{{ $tierConfig['rules']['point_value_rp'] ?? 100 }}"
-                                        class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49]" />
-                                    <span class="text-[10px] text-slate-400 mt-1 block">Contoh: 1 Poin = Potongan Rp 100</span>
-                                </div>
+                        {{-- Quick Add Custom Category Rule --}}
+                        <div class="pt-4 border-t border-slate-100 bg-slate-50/60 p-4 rounded-xl flex flex-col sm:flex-row items-center gap-3">
+                            <span class="text-xs font-bold text-slate-700 shrink-0">+ Tambah Kategori Lain:</span>
+                            <input type="text" name="new_category_name" placeholder="Nama Kategori (contoh: Cotton / T-Shirt)"
+                                class="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:border-[#006c49]" />
+                            <div class="flex items-center gap-1.5 w-48">
+                                <span class="text-xs text-slate-400 font-semibold">Rp</span>
+                                <input type="number" step="1000" min="1000" name="new_category_spend" placeholder="10000"
+                                    class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49]" />
+                            </div>
+                        </div>
 
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Welcome Bonus Poin Baru</label>
-                                    <input type="number" name="welcome_bonus" value="{{ $tierConfig['rules']['welcome_bonus'] ?? 50 }}"
-                                        class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49]" />
-                                    <span class="text-[10px] text-slate-400 mt-1 block">Poin otomatis saat pertama kali daftar</span>
-                                </div>
+                        {{-- Welcome Bonus Point Setting --}}
+                        <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <h4 class="font-bold text-xs uppercase tracking-wide text-slate-800">Welcome Bonus Poin Baru</h4>
+                                <p class="text-xs text-slate-500">Poin selamat datang yang langsung diberikan saat pelanggan pertama kali mendaftar sebagai member.</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" name="welcome_bonus" value="{{ $welcomeBonus }}" min="0" max="1000"
+                                    class="w-28 px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:border-[#006c49] text-center font-bold" />
+                                <span class="text-xs font-semibold text-slate-600">Poin</span>
                             </div>
                         </div>
 
                         <div class="flex justify-end pt-4 border-t border-slate-100">
                             <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#006c49] hover:bg-[#005a3c] text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer">
-                                Simpan Pengaturan Tier &amp; Poin
+                                Simpan Semua Pengaturan Kategori &amp; Poin
                             </button>
                         </div>
                     </form>
                 </div>
-
             </section>
 
         </main>
+    </div>
+
+    {{-- MODAL TAMBAH TIER BARU --}}
+    <div id="createTierModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#006c49]">military_tech</span>
+                    Tambah Tier Baru
+                </h3>
+                <button type="button" onclick="closeCreateTierModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+            </div>
+
+            <form action="{{ route('loyalty.tiers.store') }}" method="POST" class="space-y-4">
+                @csrf
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Nama Tier <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="name" required placeholder="Contoh: Diamond"
+                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-medium text-slate-900" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Level Urutan <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" name="level" required min="1" max="20" value="{{ $tiers->count() + 1 }}"
+                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Min. Belanja Kumulatif (Rp) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" step="100000" min="0" name="min_spend" required placeholder="10000000"
+                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Multiplier Poin <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" step="0.05" min="0.1" max="10" name="point_multiplier" required value="1.0"
+                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Diskon Belanja Member (%) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" step="0.5" min="0" max="100" name="discount_percent" required value="0"
+                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
+                        <span class="text-[10px] text-slate-400">Potongan belanja otomatis di kasir</span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Nilai Tukar Poin (Rp/pt) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" step="10" min="1" name="point_value_rp" required value="100"
+                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
+                        <span class="text-[10px] text-slate-400">1 Poin = Potongan Rp ...</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                        Warna Badge
+                    </label>
+                    <select name="badge_color" class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-medium text-slate-900">
+                        <option value="slate">Slate / Neutral (Starter)</option>
+                        <option value="emerald">Emerald / Hijau Z1</option>
+                        <option value="cyan">Cyan / Silver Sky</option>
+                        <option value="amber">Amber / Gold</option>
+                        <option value="purple">Purple / Prestige VIP</option>
+                        <option value="rose">Rose / Ruby</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                        Deskripsi Benefit / Perks
+                    </label>
+                    <textarea name="perks" rows="2" placeholder="Contoh: Diskon 5%, Multiplier 2x, Akses Produk Eksklusif"
+                        class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs text-slate-900"></textarea>
+                </div>
+
+                <div class="pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                        <input type="checkbox" name="is_default" value="1" class="rounded text-[#006c49] focus:ring-emerald-200 border-slate-300">
+                        <span>Jadikan sebagai Tier Default untuk Member Baru</span>
+                    </label>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeCreateTierModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-[#006c49] hover:bg-[#005a3c] text-white rounded-xl text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer">
+                        Simpan Tier Baru
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- MODAL EDIT TIER --}}
+    <div id="editTierModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#006c49]">edit</span>
+                    Edit Tier: <span id="edit-tier-title-name" class="text-[#006c49]"></span>
+                </h3>
+                <button type="button" onclick="closeEditTierModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+            </div>
+
+            <form id="editTierForm" method="POST" class="space-y-4">
+                @csrf
+                @method('PUT')
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Nama Tier <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="edit_name" name="name" required
+                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-medium text-slate-900" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Level Urutan <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" id="edit_level" name="level" required min="1" max="20"
+                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Min. Belanja Kumulatif (Rp) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" step="100000" min="0" id="edit_min_spend" name="min_spend" required
+                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Multiplier Poin <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" step="0.05" min="0.1" max="10" id="edit_point_multiplier" name="point_multiplier" required
+                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Diskon Belanja Member (%) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" step="0.5" min="0" max="100" id="edit_discount_percent" name="discount_percent" required
+                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
+                        <span class="text-[10px] text-slate-400">Potongan belanja otomatis di kasir</span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Nilai Tukar Poin (Rp/pt) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" step="10" min="1" id="edit_point_value_rp" name="point_value_rp" required
+                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
+                        <span class="text-[10px] text-slate-400">1 Poin = Potongan Rp ...</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                        Warna Badge
+                    </label>
+                    <select id="edit_badge_color" name="badge_color" class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-medium text-slate-900">
+                        <option value="slate">Slate / Neutral (Starter)</option>
+                        <option value="emerald">Emerald / Hijau Z1</option>
+                        <option value="cyan">Cyan / Silver Sky</option>
+                        <option value="amber">Amber / Gold</option>
+                        <option value="purple">Purple / Prestige VIP</option>
+                        <option value="rose">Rose / Ruby</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                        Deskripsi Benefit / Perks
+                    </label>
+                    <textarea id="edit_perks" name="perks" rows="2"
+                        class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs text-slate-900"></textarea>
+                </div>
+
+                <div class="pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                        <input type="checkbox" id="edit_is_default" name="is_default" value="1" class="rounded text-[#006c49] focus:ring-emerald-200 border-slate-300">
+                        <span>Jadikan sebagai Tier Default untuk Member Baru</span>
+                    </label>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeEditTierModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-[#006c49] hover:bg-[#005a3c] text-white rounded-xl text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer">
+                        Perbarui Tier
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     {{-- MODAL DAFTAR MEMBER BARU (Tanpa Rasa Favorit) --}}
@@ -652,8 +929,8 @@
     <script>
         let currentScannedCustomerId = null;
 
-        const activeNavClass = 'loy-nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all cursor-pointer bg-[#5cf3b3] text-[#004d34] font-extrabold shadow-2xs';
-        const inactiveNavClass = 'loy-nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium';
+        const activeNavClass = 'loy-nav-item w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all cursor-pointer bg-[#5cf3b3] text-[#004d34] font-extrabold shadow-2xs';
+        const inactiveNavClass = 'loy-nav-item w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium';
 
         // Switch Sidebar Tab
         function switchTab(tab) {
@@ -664,14 +941,20 @@
             // Update sidebar buttons style
             ['dashboard', 'members', 'tiers'].forEach(t => {
                 const btn = document.getElementById('nav-btn-' + t);
-                if (btn) btn.className = (t === tab) ? activeNavClass : inactiveNavClass;
+                if (btn) {
+                    if (t === tab) {
+                        btn.className = 'loy-nav-item w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all cursor-pointer bg-[#5cf3b3] text-[#004d34] font-extrabold shadow-2xs';
+                    } else {
+                        btn.className = 'loy-nav-item w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium';
+                    }
+                }
             });
 
             // Update Header Title
             const titles = {
                 'dashboard': ['Dashboard Scanner Kasir', 'Scan barcode / QR Code pelanggan atau cari berdasarkan nomor WhatsApp'],
                 'members': ['Daftar Member Loyalty', 'Kelola data pelanggan, pantau level tier, riwayat kartu, dan poin belanja'],
-                'tiers': ['Pengaturan Tier & Poin Member', 'Kelola ambang batas pembelanjaan, perolehan poin, dan benefit setiap tier member']
+                'tiers': ['Pengaturan Tier & Poin Member', 'Kelola level tier, aturan perolehan poin per kategori barang, dan diskon belanja member']
             };
             if (titles[tab]) {
                 document.getElementById('topbar-title').innerText = titles[tab][0];
@@ -714,12 +997,39 @@
             });
         }
 
+        // Modal Handlers
         function openRegisterModal() {
             document.getElementById('registerModal').classList.remove('hidden');
         }
         function closeRegisterModal() {
             document.getElementById('registerModal').classList.add('hidden');
         }
+
+        function openCreateTierModal() {
+            document.getElementById('createTierModal').classList.remove('hidden');
+        }
+        function closeCreateTierModal() {
+            document.getElementById('createTierModal').classList.add('hidden');
+        }
+
+        function openEditTierModal(tier) {
+            document.getElementById('edit-tier-title-name').innerText = tier.name;
+            document.getElementById('editTierForm').action = `/loyalty/tiers/${tier.id}`;
+            document.getElementById('edit_name').value = tier.name;
+            document.getElementById('edit_level').value = tier.level;
+            document.getElementById('edit_min_spend').value = tier.min_spend;
+            document.getElementById('edit_point_multiplier').value = tier.point_multiplier;
+            document.getElementById('edit_discount_percent').value = tier.discount_percent;
+            document.getElementById('edit_point_value_rp').value = tier.point_value_rp;
+            document.getElementById('edit_badge_color').value = tier.badge_color || 'slate';
+            document.getElementById('edit_perks').value = tier.perks || '';
+            document.getElementById('edit_is_default').checked = Boolean(tier.is_default);
+            document.getElementById('editTierModal').classList.remove('hidden');
+        }
+        function closeEditTierModal() {
+            document.getElementById('editTierModal').classList.add('hidden');
+        }
+
         function closeScanResult() {
             document.getElementById('scan_result_box').classList.add('hidden');
             document.getElementById('live_scanner_input').value = '';
@@ -758,14 +1068,17 @@
             document.getElementById('res_points_rp').innerText = `Rp ${(c.points_value_rp ?? (c.points * 100)).toLocaleString('id-ID')}`;
 
             const badge = document.getElementById('res_tier_badge');
-            badge.innerText = c.tier;
-            if (c.tier === 'Master') {
-                badge.className = 'px-2.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200';
-            } else if (c.tier === 'Cloud Chaser') {
-                badge.className = 'px-2.5 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200';
-            } else {
-                badge.className = 'px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-[#006c49] border border-emerald-200';
-            }
+            badge.innerText = `★ ${c.tier.toUpperCase()}`;
+            const color = c.tier_badge_color || 'slate';
+            const colorClasses = {
+                'slate': 'bg-slate-100 text-slate-700 border border-slate-300',
+                'emerald': 'bg-emerald-50 text-[#006c49] border border-emerald-300',
+                'cyan': 'bg-sky-50 text-sky-700 border border-sky-300',
+                'amber': 'bg-amber-50 text-amber-700 border border-amber-300',
+                'purple': 'bg-purple-50 text-purple-700 border border-purple-300',
+                'rose': 'bg-rose-50 text-rose-700 border border-rose-300',
+            };
+            badge.className = `px-2.5 py-0.5 rounded text-[10px] font-bold ${colorClasses[color] || colorClasses['slate']}`;
 
             document.getElementById('res_card_url').href = c.card_url;
             document.getElementById('res_wa_url').href = c.whatsapp_url;

@@ -42,6 +42,10 @@ class Customer extends Model
             if (session()->has('active_store_id') && empty($customer->store_id)) {
                 $customer->store_id = session('active_store_id');
             }
+            if (empty($customer->tier)) {
+                $defaultTier = LoyaltyTier::where('is_default', true)->first();
+                $customer->tier = $defaultTier ? $defaultTier->name : 'Essential';
+            }
             if (empty($customer->card_token)) {
                 $customer->card_token = Str::random(24);
             }
@@ -180,24 +184,32 @@ class Customer extends Model
     }
 
     /**
+     * Get LoyaltyTier model for this customer
+     */
+    public function getTierModel(): ?LoyaltyTier
+    {
+        return LoyaltyTier::where('name', $this->tier)->first() 
+            ?? LoyaltyTier::where('is_default', true)->first();
+    }
+
+    /**
      * Update tier based on cumulative spending
      */
     public function updateTierAfterPurchase(float $spentAmount): void
     {
         $this->total_spent += $spentAmount;
 
-        $tierConfig = \App\Http\Controllers\LoyaltyCardController::getTierConfig();
-        $targetCloud = (float) ($tierConfig['cloud_chaser']['min_spend'] ?? 1500000);
-        $targetMaster = (float) ($tierConfig['master']['min_spend'] ?? 3500000);
-
-        $currentTier = $this->tier;
-        $newTier = 'Rookie';
-
-        if ($this->total_spent >= $targetMaster) {
-            $newTier = 'Master';
-        } elseif ($this->total_spent >= $targetCloud) {
-            $newTier = 'Cloud Chaser';
+        $tiers = LoyaltyTier::orderBy('min_spend', 'desc')->get();
+        $matchedTier = null;
+        foreach ($tiers as $t) {
+            if ($this->total_spent >= (float) $t->min_spend) {
+                $matchedTier = $t;
+                break;
+            }
         }
+
+        $newTier = $matchedTier ? $matchedTier->name : 'Essential';
+        $currentTier = $this->tier;
 
         $this->tier = $newTier;
         $this->save();

@@ -185,6 +185,10 @@
                     <span>Total Discount Item</span>
                     <span class="font-semibold" id="summary-discount">-Rp 0</span>
                 </div>
+                <div class="flex justify-between items-center mb-2 text-sm text-indigo-600 hidden" id="summary-tier-discount-row">
+                    <span id="summary-tier-discount-label">Diskon Member</span>
+                    <span class="font-semibold" id="summary-tier-discount">-Rp 0</span>
+                </div>
                 <div class="flex justify-between items-center mb-3 text-sm text-emerald-600 hidden" id="summary-points-row">
                     <span>Diskon Poin Member</span>
                     <span class="font-semibold" id="summary-points-discount">-Rp 0</span>
@@ -250,14 +254,6 @@
                 <p class="text-[11px] text-on-surface-variant mt-1">Kartu digital member akan dikirimkan ke nomor ini.</p>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wide mb-1">
-                    Rasa / Liquid Favorit (Opsional)
-                </label>
-                <input type="text" id="reg_flavor" placeholder="Contoh: Fruity dingin 3mg / Creamy"
-                    class="w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-xl text-sm focus:outline-none focus:border-primary transition text-sm" />
-            </div>
-
             <div class="p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium flex items-center gap-2">
                 <span class="material-symbols-outlined text-base">card_giftcard</span>
                 <span>Member baru langsung mendapatkan bonus <strong>50 Poin</strong>!</span>
@@ -275,9 +271,10 @@
     </div>
 </div>
 
-{{-- Products JS Data --}}
+{{-- Products & Category Rules JS Data --}}
 <script>
     const productsData = @json($products);
+    const categoryPointRules = @json($categoryPointRules ?? []);
 </script>
 
 @endsection
@@ -295,12 +292,14 @@
     function calculateTotals() {
         let grandSubtotal = 0;
         let totalDiscount = 0;
+        let totalRawPointsEarned = 0;
         
         const rows = document.querySelectorAll('.item-row');
         rows.forEach(row => {
             const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
             const price = parseFloat(row.querySelector('.item-price').value) || 0;
             const discount = parseFloat(row.querySelector('.item-discount').value) || 0;
+            const productId = row.querySelector('.product-id-input')?.value;
             
             const subtotal = (qty * price) - discount;
             const finalSubtotal = subtotal > 0 ? subtotal : 0;
@@ -310,9 +309,46 @@
             
             grandSubtotal += (qty * price);
             totalDiscount += discount;
+
+            // Calculate category points for this item
+            if (productId && activeCustomer && finalSubtotal > 0) {
+                const prod = productsData.find(p => p.id == productId);
+                if (prod) {
+                    const catName = (prod.category || '').toLowerCase().trim();
+                    let spendPerPoint = 10000;
+                    if (categoryPointRules) {
+                        for (const [k, v] of Object.entries(categoryPointRules)) {
+                            if (k.toLowerCase().trim() === catName) {
+                                spendPerPoint = parseFloat(v) || 10000;
+                                break;
+                            }
+                        }
+                    }
+                    if (spendPerPoint > 0) {
+                        totalRawPointsEarned += Math.floor(finalSubtotal / spendPerPoint);
+                    }
+                }
+            }
         });
         
-        let grandTotal = grandSubtotal - totalDiscount;
+        let netBeforeTierDiscount = grandSubtotal - totalDiscount;
+        if (netBeforeTierDiscount < 0) netBeforeTierDiscount = 0;
+
+        // Member Tier Discount (Potongan Langsung Belanja Berdasarkan Tier)
+        let tierDiscountAmount = 0;
+        const tierDiscountRow = document.getElementById('summary-tier-discount-row');
+        if (activeCustomer && activeCustomer.tier_discount_percent > 0) {
+            tierDiscountAmount = Math.round(netBeforeTierDiscount * (activeCustomer.tier_discount_percent / 100));
+            if (tierDiscountRow) {
+                tierDiscountRow.classList.remove('hidden');
+                document.getElementById('summary-tier-discount-label').innerText = `Diskon Member ${activeCustomer.tier} (${activeCustomer.tier_discount_percent}%)`;
+                document.getElementById('summary-tier-discount').innerText = '-' + formatCurrency(tierDiscountAmount);
+            }
+        } else {
+            if (tierDiscountRow) tierDiscountRow.classList.add('hidden');
+        }
+
+        let grandTotal = netBeforeTierDiscount - tierDiscountAmount;
         if (grandTotal < 0) grandTotal = 0;
 
         // Points Discount Calculation
@@ -320,9 +356,10 @@
         let pointsRedeemed = 0;
 
         if (activeCustomer && isRedeemingPoints && activeCustomer.points > 0) {
-            const maxPointsRp = activeCustomer.points_value_rp; // Rp value of available points
+            const maxPointsRp = activeCustomer.points_value_rp; // Rp value of available points based on tier
+            const pointRate = (activeCustomer.points > 0) ? (activeCustomer.points_value_rp / activeCustomer.points) : 100;
             pointsDiscountAmount = Math.min(maxPointsRp, grandTotal);
-            pointsRedeemed = Math.ceil(pointsDiscountAmount / 100); // 1 point = Rp 100
+            pointsRedeemed = Math.ceil(pointsDiscountAmount / (pointRate || 100));
             grandTotal -= pointsDiscountAmount;
 
             document.getElementById('summary-points-row').classList.remove('hidden');
@@ -342,12 +379,13 @@
         document.getElementById('summary-total').innerText = formatCurrency(grandTotal > 0 ? grandTotal : 0);
         document.getElementById('input_total_amount').value = grandTotal > 0 ? grandTotal : 0;
 
-        // Estimated Earned Points Box
+        // Estimated Earned Points Box (Based on item categories and tier multiplier)
         const pointsEarnedBox = document.getElementById('summary-points-earned-box');
         if (activeCustomer) {
-            const estPoints = Math.floor(grandTotal / 10000);
+            const multiplier = activeCustomer.tier_multiplier || 1.0;
+            const estPoints = Math.round(totalRawPointsEarned * multiplier);
             pointsEarnedBox.classList.remove('hidden');
-            document.getElementById('summary-points-earned').innerText = `+${estPoints} Poin`;
+            document.getElementById('summary-points-earned').innerText = `+${estPoints} Poin (${multiplier}x)`;
         } else {
             pointsEarnedBox.classList.add('hidden');
         }
@@ -383,18 +421,22 @@
         // Update display card
         document.getElementById('selected-customer-name-display').innerText = cust.name;
         document.getElementById('selected-customer-meta').innerText = `${cust.member_code} • ${cust.phone}`;
-        document.getElementById('selected-customer-points').innerText = `${cust.points.toLocaleString('id-ID')} Poin (Rp ${(cust.points * 100).toLocaleString('id-ID')})`;
+        const pointValueRp = cust.points_value_rp ?? (cust.points * 100);
+        document.getElementById('selected-customer-points').innerText = `${cust.points.toLocaleString('id-ID')} Poin (Rp ${pointValueRp.toLocaleString('id-ID')})`;
         document.getElementById('selected-customer-stamps').innerText = `${cust.liquid_stamp_count} / 5 Stempel`;
 
         const badge = document.getElementById('selected-customer-tier-badge');
-        badge.innerText = cust.tier;
-        if (cust.tier === 'Master') {
-            badge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-purple-500/15 text-purple-600 border border-purple-500/20';
-        } else if (cust.tier === 'Cloud Chaser') {
-            badge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-cyan-500/15 text-cyan-600 border border-cyan-500/20';
-        } else {
-            badge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-600 border border-emerald-500/20';
-        }
+        badge.innerText = `★ ${cust.tier.toUpperCase()}`;
+        const color = cust.tier_badge_color || 'emerald';
+        const colorMap = {
+            'slate': 'bg-slate-500/15 text-slate-700 border border-slate-500/20',
+            'emerald': 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/20',
+            'cyan': 'bg-sky-500/15 text-sky-600 border border-sky-500/20',
+            'amber': 'bg-amber-500/15 text-amber-600 border border-amber-500/20',
+            'purple': 'bg-purple-500/15 text-purple-600 border border-purple-500/20',
+            'rose': 'bg-rose-500/15 text-rose-600 border border-rose-500/20',
+        };
+        badge.className = `text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${colorMap[color] || colorMap['emerald']}`;
 
         document.getElementById('customer_wa_link').href = cust.whatsapp_url;
 
@@ -457,7 +499,6 @@
         const payload = {
             name: document.getElementById('reg_name').value,
             phone: document.getElementById('reg_phone').value,
-            favorite_flavor: document.getElementById('reg_flavor').value,
             _token: '{{ csrf_token() }}'
         };
 
@@ -482,8 +523,11 @@
                     phone: data.customer.phone,
                     member_code: data.customer.member_code,
                     tier: data.customer.tier,
+                    tier_badge_color: data.customer.tier_badge_color || 'emerald',
+                    tier_discount_percent: data.customer.tier_discount_percent || 0,
+                    tier_multiplier: data.customer.tier_multiplier || 1.0,
                     points: data.customer.points,
-                    points_value_rp: data.customer.points * 100,
+                    points_value_rp: data.customer.points_value_rp ?? (data.customer.points * 100),
                     liquid_stamp_count: data.customer.liquid_stamp_count,
                     whatsapp_url: data.whatsapp_url
                 });
