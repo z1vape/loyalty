@@ -169,9 +169,16 @@
                 </div>
             @endif
             @if(session('info'))
-                <div class="p-3.5 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-xs font-medium flex items-center gap-2 shadow-2xs">
-                    <span class="material-symbols-outlined text-sky-600 text-[18px]">info</span>
-                    <span>{{ session('info') }}</span>
+                <div class="p-3.5 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-xs font-medium flex items-center justify-between shadow-2xs">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sky-600 text-[18px]">info</span>
+                        <span>{{ session('info') }}</span>
+                    </span>
+                    @if(session('new_member_whatsapp'))
+                        <a href="{{ session('new_member_whatsapp') }}" target="_blank" class="px-3 py-1 rounded-lg bg-sky-700 text-white text-xs font-bold hover:bg-sky-800 transition shadow-xs">
+                            Kirim Kartu ke WA →
+                        </a>
+                    @endif
                 </div>
             @endif
         </div>

@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToStore;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LoyaltyLog extends Model
 {
-    use BelongsToStore;
+    // Note: Loyalty logs reflect the customer's full point history across all stores,
+    // so we intentionally do NOT apply the BelongsToStore global scope.
 
     protected $fillable = [
         'customer_id',
@@ -22,7 +23,16 @@ class LoyaltyLog extends Model
         'description',
     ];
 
-    public function customer()
+    protected static function booted()
+    {
+        static::creating(function ($log) {
+            if (session()->has('active_store_id') && empty($log->store_id)) {
+                $log->store_id = session('active_store_id');
+            }
+        });
+    }
+
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }

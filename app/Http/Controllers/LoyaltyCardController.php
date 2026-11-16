@@ -275,38 +275,75 @@ class LoyaltyCardController extends Controller
             'phone' => 'required|string|max:20',
         ]);
 
-        $phone = preg_replace('/[^0-9]/', '', $request->phone);
-        if (str_starts_with($phone, '62')) {
-            $phone = '0' . substr($phone, 2);
+        $rawPhone = trim($request->phone, " \t\n\r\0\x0B'\"");
+        $cleanDigits = preg_replace('/[^0-9]/', '', $rawPhone);
+        if (str_starts_with($cleanDigits, '62')) {
+            $phone = '0' . substr($cleanDigits, 2);
+        } else {
+            $phone = $cleanDigits;
         }
 
-        $existing = Customer::where('phone', $phone)->first();
+        $existing = Customer::where('phone', $phone)
+            ->orWhere('phone', $rawPhone)
+            ->when($cleanDigits, function ($q) use ($cleanDigits) {
+                $q->orWhere('phone', 'like', "%{$cleanDigits}%");
+            })
+            ->first();
+
         if ($existing) {
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Pelanggan dengan nomor ini sudah terdaftar.',
+                    'already_exists' => true,
+                    'message' => "Nomor WhatsApp {$phone} sudah terdaftar atas nama {$existing->name} ({$existing->member_code}).",
                     'customer' => $existing,
+                    'card_url' => $existing->card_url,
                     'whatsapp_url' => $existing->whatsapp_share_url,
                 ]);
             }
-            return back()->with('info', "Pelanggan sudah terdaftar sebelumnya: {$existing->name}");
+            return redirect()->route('loyalty.index', ['tab' => 'members'])
+                             ->with('info', "Nomor WhatsApp {$phone} sudah terdaftar atas nama {$existing->name} ({$existing->member_code}).")
+                             ->with('new_member_whatsapp', $existing->whatsapp_share_url);
         }
 
         $tierConfig = static::getTierConfig();
         $welcomeBonus = (int) ($tierConfig['rules']['welcome_bonus'] ?? 50);
 
-        $customer = Customer::create([
-            'name' => $request->name,
-            'phone' => $phone,
-            'tier' => 'Rookie',
-            'points' => $welcomeBonus,
-        ]);
+        try {
+            $customer = Customer::create([
+                'name' => trim($request->name),
+                'phone' => $phone,
+                'tier' => 'Rookie',
+                'points' => $welcomeBonus,
+                'store_id' => session('active_store_id'),
+            ]);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            $existing = Customer::where('phone', $phone)
+                ->orWhere('phone', 'like', "%{$phone}%")
+                ->first();
+            if ($existing) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'already_exists' => true,
+                        'message' => "Nomor WhatsApp {$phone} sudah terdaftar atas nama {$existing->name} ({$existing->member_code}).",
+                        'customer' => $existing,
+                        'card_url' => $existing->card_url,
+                        'whatsapp_url' => $existing->whatsapp_share_url,
+                    ]);
+                }
+                return redirect()->route('loyalty.index', ['tab' => 'members'])
+                                 ->with('info', "Nomor WhatsApp {$phone} sudah terdaftar atas nama {$existing->name} ({$existing->member_code}).")
+                                 ->with('new_member_whatsapp', $existing->whatsapp_share_url);
+            }
+            throw $e;
+        }
 
         // Catat welcome bonus
         if ($welcomeBonus > 0) {
             LoyaltyLog::create([
                 'customer_id' => $customer->id,
+                'store_id' => session('active_store_id'),
                 'type' => 'earn_points',
                 'points_change' => $welcomeBonus,
                 'points_balance' => $welcomeBonus,
@@ -319,6 +356,7 @@ class LoyaltyCardController extends Controller
                 'success' => true,
                 'message' => 'Member baru berhasil didaftarkan!',
                 'customer' => $customer,
+                'card_url' => $customer->card_url,
                 'whatsapp_url' => $customer->whatsapp_share_url,
             ]);
         }

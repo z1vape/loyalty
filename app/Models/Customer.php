@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
-use App\Traits\BelongsToStore;
 
 class Customer extends Model
 {
-    use BelongsToStore;
+    // Note: Customer loyalty members are global across all Z1 Vape stores,
+    // so we intentionally do NOT apply the BelongsToStore global scope.
 
     protected $fillable = [
         'store_id',
@@ -38,6 +39,9 @@ class Customer extends Model
     protected static function booted()
     {
         static::creating(function ($customer) {
+            if (session()->has('active_store_id') && empty($customer->store_id)) {
+                $customer->store_id = session('active_store_id');
+            }
             if (empty($customer->card_token)) {
                 $customer->card_token = Str::random(24);
             }
@@ -51,7 +55,7 @@ class Customer extends Model
         });
     }
 
-    public function store()
+    public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class);
     }
