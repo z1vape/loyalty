@@ -336,7 +336,7 @@ class SaleController extends Controller
                 // Track liquid items for stamp card
                 $categoryName = strtolower($product->category ?? '');
                 $productName = strtolower($product->name ?? '');
-                if (str_contains($categoryName, 'liquid') || str_contains($productName, 'liquid')) {
+                if (str_contains($categoryName, 'liquid') || str_contains($productName, 'liquid') || str_contains($categoryName, 'saltnic') || str_contains($categoryName, 'freebase')) {
                     $liquidBottlesCount += (int) $itemData['quantity'];
                 }
 

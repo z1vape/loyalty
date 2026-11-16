@@ -39,22 +39,60 @@ class LoyaltyCardController extends Controller
         // 1. Tiers with customer count
         $tiers = LoyaltyTier::withCount('customers')->orderBy('level')->get();
 
-        // 2. Category Point Rules
-        $categoryRules = LoyaltyCategoryRule::orderBy('category_name')->get();
+        // 2. Master Categories from Settings & Products
+        $settingCategories = Setting::withoutGlobalScopes()
+            ->where('type', 'category')
+            ->pluck('value')
+            ->map(fn($v) => trim($v))
+            ->filter()
+            ->values()
+            ->toArray();
 
-        // 3. Gather all known product categories across the system
         $productCategories = Product::withoutGlobalScopes()
             ->whereNotNull('category')
             ->where('category', '!=', '')
             ->distinct()
             ->pluck('category')
+            ->map(fn($v) => trim($v))
+            ->filter()
+            ->values()
             ->toArray();
-        $settingCategories = Setting::withoutGlobalScopes()
-            ->where('type', 'category')
-            ->pluck('value')
-            ->toArray();
-        $allCategories = array_unique(array_merge($productCategories, $settingCategories, $categoryRules->pluck('category_name')->toArray()));
+
+        $masterCategories = array_unique(array_merge($settingCategories, $productCategories));
+        if (empty($masterCategories)) {
+            $masterCategories = ['Aksesoris', 'Atomizer', 'Device', 'Freebase', 'OCC/Coil', 'Saltnic'];
+        }
+
+        // Clean up legacy placeholder categories that don't match actual store categories
+        $placeholderCategories = [
+            'Accessories',
+            'Box Mod',
+            'Coil & Cartridge',
+            'E-Liquid Freebase',
+            'E-Liquid SaltNic',
+            'Pod System',
+        ];
+        LoyaltyCategoryRule::whereIn('category_name', $placeholderCategories)
+            ->whereNotIn('category_name', $masterCategories)
+            ->delete();
+
+        // Ensure real master categories exist as rules
+        foreach ($masterCategories as $catName) {
+            LoyaltyCategoryRule::firstOrCreate(
+                ['category_name' => $catName],
+                [
+                    'spend_per_point' => 10000,
+                    'is_active' => true,
+                ]
+            );
+        }
+
+        $allCategories = array_values($masterCategories);
         sort($allCategories);
+
+        $categoryRules = LoyaltyCategoryRule::whereIn('category_name', $allCategories)
+            ->orderBy('category_name')
+            ->get();
 
         // 4. Welcome bonus setting
         $welcomeBonusSetting = Setting::withoutGlobalScopes()->where('type', 'loyalty_welcome_bonus')->first();
