@@ -152,7 +152,7 @@
                 <!-- Category Tabs -->
                 <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-sm" id="categoryTabGroup">
                     <button type="button" data-filter="all" class="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white font-medium shadow-xs transition-colors shrink-0">
-                        Semua Portal (4)
+                        Semua Portal (5)
                     </button>
                     <button type="button" data-filter="hr" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium transition-colors shrink-0">
                         Human Resource
@@ -166,13 +166,16 @@
                     <button type="button" data-filter="report" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium transition-colors shrink-0">
                         Report
                     </button>
+                    <button type="button" data-filter="loyalty" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium transition-colors shrink-0">
+                        Loyalty Member
+                    </button>
                 </div>
 
             </div>
             <!-- END: FilterAndControlBar -->
 
             <!-- BEGIN: AppCardGrid (Kotak-Kotak Kecil Saja Seperti Template) -->
-            <div id="appsGridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 lg:gap-5 max-w-5xl" data-purpose="apps-grid">
+            <div id="appsGridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5 max-w-6xl" data-purpose="apps-grid">
 
                 <!-- Card 1: Human Resources (Direct to HR Dashboard) -->
                 <a href="{{ route('commercial.hr.dashboard') }}" class="app-card bg-white rounded-xl border border-slate-200/90 overflow-hidden flex flex-col justify-between cursor-pointer group shadow-2xs no-underline text-inherit" data-category="hr" data-name="Human Resource HR Dashboard Payroll Daftar Kehadiran Shift Kerja Status Kehadiran Jadwal Kerja Shift Pattern">
@@ -279,6 +282,33 @@
                                 <span class="inline-flex items-center justify-center h-5 px-1.5 text-[9px] font-semibold bg-slate-100 text-slate-600 rounded-full border border-white">RPT</span>
                             </div>
                             <span class="text-slate-400 group-hover:text-sky-600 p-0.5" title="Buka Pusat Laporan">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                            </span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Card 5: Loyalty Member (Direct to Loyalty Card Dashboard) -->
+                <a href="{{ route('loyalty.index') }}" class="app-card bg-white rounded-xl border border-slate-200/90 overflow-hidden flex flex-col justify-between cursor-pointer group shadow-2xs no-underline text-inherit" data-category="loyalty" data-name="Loyalty Member Z1 Vape Loyalty Card Digital Kasir Stempel Poin Diskon Hadiah Member Kartu">
+                    <!-- Top Half: Colored Header (h-28) -->
+                    <div class="h-28 bg-[#8b5cf6] flex flex-col items-center justify-center p-3 relative transition-opacity group-hover:opacity-95 text-white">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        </svg>
+                        <span class="text-white font-bold text-xs uppercase tracking-wider mt-1">Loyalty &amp; Cards</span>
+                    </div>
+                    <!-- Bottom Half: Details & Actions -->
+                    <div class="p-3 bg-white flex flex-col justify-between flex-1 gap-2.5">
+                        <div class="flex items-center justify-between gap-1">
+                            <span class="text-sm font-semibold text-slate-800 truncate group-hover:text-purple-600" title="Loyalty Member">Loyalty Member</span>
+                            <span class="bg-purple-600 text-white text-[9px] font-medium px-1.5 py-0.5 rounded leading-none shrink-0" title="Portal Kartu & Poin Member">Card</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+                            <div class="flex items-center -space-x-1">
+                                <span class="inline-flex items-center justify-center h-5 px-1.5 text-[9px] font-semibold bg-purple-100 text-purple-700 rounded-full border border-white">PTS</span>
+                                <span class="inline-flex items-center justify-center h-5 px-1.5 text-[9px] font-semibold bg-slate-100 text-slate-600 rounded-full border border-white">STAMP</span>
+                            </div>
+                            <span class="text-slate-400 group-hover:text-purple-600 p-0.5" title="Buka Loyalty Member">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
                             </span>
                         </div>

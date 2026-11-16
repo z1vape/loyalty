@@ -46,6 +46,10 @@
         </div>
 
         <div class="flex items-center gap-3">
+            <a href="{{ route('portal') }}" class="px-3.5 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition border border-slate-700 no-underline">
+                <span class="material-symbols-outlined text-base">apps</span>
+                Portal
+            </a>
             <button onclick="openRegisterModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 text-xs font-black hover:opacity-90 shadow-md shadow-emerald-500/20 flex items-center gap-1.5 transition">
                 <span class="material-symbols-outlined text-base">person_add</span>
                 + DAFTAR MEMBER BARU
