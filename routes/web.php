@@ -73,10 +73,6 @@ Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Loyalty & Customer APIs
-    Route::get('/api/loyalty/search', [\App\Http\Controllers\LoyaltyCardController::class, 'search'])->name('loyalty.search');
-    Route::post('/api/loyalty/register', [\App\Http\Controllers\LoyaltyCardController::class, 'registerFast'])->name('loyalty.register');
-
     // Modular Specialized Dashboards & Modules
     Route::prefix('purchasing')->name('purchasing.')->group(function () {
         Route::get('/dashboard', [PurchasingDashboardController::class, 'index'])->name('dashboard');
