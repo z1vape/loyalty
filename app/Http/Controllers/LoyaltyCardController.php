@@ -4,16 +4,62 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\LoyaltyLog;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class LoyaltyCardController extends Controller
 {
     /**
+     * Get or initialize default tier configuration
+     */
+    public static function getTierConfig(): array
+    {
+        try {
+            $setting = Setting::where('type', 'loyalty_tier_config')->first();
+            if ($setting && !empty($setting->value)) {
+                $decoded = json_decode($setting->value, true);
+                if (is_array($decoded)) {
+                    return $decoded;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fallback to default
+        }
+
+        return [
+            'rookie' => [
+                'name' => 'Rookie',
+                'min_spend' => 0,
+                'point_multiplier' => 1.0,
+                'perks' => 'Akses Member, Stempel Liquid & Tukar Poin Diskon',
+            ],
+            'cloud_chaser' => [
+                'name' => 'Cloud Chaser',
+                'min_spend' => 1500000,
+                'point_multiplier' => 1.25,
+                'perks' => 'Bonus Perolehan Poin 1.25x, Diskon Promo Bulanan',
+            ],
+            'master' => [
+                'name' => 'Master',
+                'min_spend' => 3500000,
+                'point_multiplier' => 1.5,
+                'perks' => 'Bonus Perolehan Poin 1.5x, Antrean Kasir Prioritas & Merchandise',
+            ],
+            'rules' => [
+                'spend_per_point' => 10000,
+                'point_value_rp' => 100,
+                'welcome_bonus' => 50,
+            ]
+        ];
+    }
+
+    /**
      * Cashier & Admin Portal: Main Loyalty Dashboard
      */
     public function index(Request $request)
     {
+        $activeTab = $request->input('tab', session('active_tab', 'dashboard'));
         $search = trim($request->input('search', ''));
 
         $customersQuery = Customer::with(['loyaltyLogs' => function ($q) {
@@ -26,19 +72,69 @@ class LoyaltyCardController extends Controller
                   ->orWhere('phone', 'like', "%{$search}%")
                   ->orWhere('member_code', 'like', "%{$search}%");
             });
+            $activeTab = 'members';
         }
 
         $customers = $customersQuery->latest()->paginate(15)->withQueryString();
 
-        // Statistics
-        $stats = [
-            'total_members' => Customer::count(),
-            'total_points' => Customer::sum('points'),
-            'total_stamps' => Customer::sum('liquid_stamp_count'),
-            'rewards_available' => Customer::sum('liquid_stamp_rewards_available'),
+        $tierConfig = static::getTierConfig();
+
+        // Tier Member Counts & Percentages
+        $totalCustomers = max(1, Customer::count());
+        $tierCounts = [
+            'Rookie' => Customer::where('tier', 'Rookie')->count(),
+            'Cloud Chaser' => Customer::where('tier', 'Cloud Chaser')->count(),
+            'Master' => Customer::where('tier', 'Master')->count(),
         ];
 
-        return view('loyalty.index', compact('customers', 'stats', 'search'));
+        return view('loyalty.index', compact(
+            'customers',
+            'search',
+            'activeTab',
+            'tierConfig',
+            'tierCounts',
+            'totalCustomers'
+        ));
+    }
+
+    /**
+     * Update tier configuration and point rules
+     */
+    public function updateTiers(Request $request)
+    {
+        $tiers = [
+            'rookie' => [
+                'name' => 'Rookie',
+                'min_spend' => (float) $request->input('tier_rookie_min_spend', 0),
+                'point_multiplier' => (float) $request->input('tier_rookie_multiplier', 1.0),
+                'perks' => $request->input('tier_rookie_perks', 'Akses Member, Stempel Liquid & Tukar Poin Diskon'),
+            ],
+            'cloud_chaser' => [
+                'name' => 'Cloud Chaser',
+                'min_spend' => (float) $request->input('tier_cloud_min_spend', 1500000),
+                'point_multiplier' => (float) $request->input('tier_cloud_multiplier', 1.25),
+                'perks' => $request->input('tier_cloud_perks', 'Bonus Perolehan Poin 1.25x, Diskon Promo Bulanan'),
+            ],
+            'master' => [
+                'name' => 'Master',
+                'min_spend' => (float) $request->input('tier_master_min_spend', 3500000),
+                'point_multiplier' => (float) $request->input('tier_master_multiplier', 1.5),
+                'perks' => $request->input('tier_master_perks', 'Bonus Perolehan Poin 1.5x, Antrean Kasir Prioritas & Merchandise'),
+            ],
+            'rules' => [
+                'spend_per_point' => max(1000, (int) $request->input('spend_per_point', 10000)),
+                'point_value_rp' => max(1, (int) $request->input('point_value_rp', 100)),
+                'welcome_bonus' => max(0, (int) $request->input('welcome_bonus', 50)),
+            ]
+        ];
+
+        Setting::updateOrCreate(
+            ['type' => 'loyalty_tier_config'],
+            ['value' => json_encode($tiers)]
+        );
+
+        return redirect()->route('loyalty.index', ['tab' => 'tiers'])
+                         ->with('success', 'Pengaturan tier pembelanjaan dan perolehan poin berhasil diperbarui!');
     }
 
     /**
@@ -50,6 +146,10 @@ class LoyaltyCardController extends Controller
             $q->latest()->take(10);
         }])->where('card_token', $cardToken)->firstOrFail();
 
+        $tierConfig = static::getTierConfig();
+        $targetCloud = $tierConfig['cloud_chaser']['min_spend'] ?? 1500000;
+        $targetMaster = $tierConfig['master']['min_spend'] ?? 3500000;
+
         // Calculate next tier target
         $nextTier = null;
         $amountToNextTier = 0;
@@ -57,14 +157,12 @@ class LoyaltyCardController extends Controller
 
         if ($customer->tier === 'Rookie') {
             $nextTier = 'Cloud Chaser';
-            $target = 1500000;
-            $amountToNextTier = max(0, $target - (float) $customer->total_spent);
-            $tierProgressPercent = min(100, round(($customer->total_spent / $target) * 100));
+            $amountToNextTier = max(0, $targetCloud - (float) $customer->total_spent);
+            $tierProgressPercent = min(100, round(($customer->total_spent / max(1, $targetCloud)) * 100));
         } elseif ($customer->tier === 'Cloud Chaser') {
             $nextTier = 'Master';
-            $target = 3500000;
-            $amountToNextTier = max(0, $target - (float) $customer->total_spent);
-            $tierProgressPercent = min(100, round(($customer->total_spent / $target) * 100));
+            $amountToNextTier = max(0, $targetMaster - (float) $customer->total_spent);
+            $tierProgressPercent = min(100, round(($customer->total_spent / max(1, $targetMaster)) * 100));
         }
 
         return view('loyalty.card', compact('customer', 'nextTier', 'amountToNextTier', 'tierProgressPercent'));
@@ -108,8 +206,11 @@ class LoyaltyCardController extends Controller
 
         if ($action === 'redeem_points') {
             $points = (int) $request->input('points', 0);
+            $tierConfig = static::getTierConfig();
+            $pointValueRp = $tierConfig['rules']['point_value_rp'] ?? 100;
             if ($customer->redeemPoints($points, null, "Penukaran Poin Diskon di Kasir")) {
-                return back()->with('success', "Berhasil menukar {$points} poin (Diskon Rp " . number_format($points * 100, 0, ',', '.') . ")!");
+                $potongan = number_format($points * $pointValueRp, 0, ',', '.');
+                return back()->with('success', "Berhasil menukar {$points} poin (Diskon Rp {$potongan})!");
             }
             return back()->with('error', "Poin tidak mencukupi untuk ditukar.");
         }
@@ -143,6 +244,9 @@ class LoyaltyCardController extends Controller
             return response()->json(['found' => false, 'message' => 'Pelanggan tidak ditemukan']);
         }
 
+        $tierConfig = static::getTierConfig();
+        $pointValueRp = $tierConfig['rules']['point_value_rp'] ?? 100;
+
         return response()->json([
             'found' => true,
             'customer' => [
@@ -152,7 +256,7 @@ class LoyaltyCardController extends Controller
                 'member_code' => $customer->member_code,
                 'tier' => $customer->tier,
                 'points' => $customer->points,
-                'points_value_rp' => $customer->points * 100,
+                'points_value_rp' => $customer->points * $pointValueRp,
                 'liquid_stamp_count' => $customer->liquid_stamp_count,
                 'rewards_available' => $customer->liquid_stamp_rewards_available,
                 'card_url' => $customer->card_url,
@@ -162,14 +266,13 @@ class LoyaltyCardController extends Controller
     }
 
     /**
-     * Fast registration for new customer at cashier
+     * Fast registration for new customer at cashier (Without Rasa Favorit)
      */
     public function registerFast(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:100',
             'phone' => 'required|string|max:20',
-            'favorite_flavor' => 'nullable|string|max:100',
         ]);
 
         $phone = preg_replace('/[^0-9]/', '', $request->phone);
@@ -190,22 +293,26 @@ class LoyaltyCardController extends Controller
             return back()->with('info', "Pelanggan sudah terdaftar sebelumnya: {$existing->name}");
         }
 
+        $tierConfig = static::getTierConfig();
+        $welcomeBonus = (int) ($tierConfig['rules']['welcome_bonus'] ?? 50);
+
         $customer = Customer::create([
             'name' => $request->name,
             'phone' => $phone,
-            'favorite_flavor' => $request->favorite_flavor,
             'tier' => 'Rookie',
-            'points' => 50, // Welcome bonus 50 poin!
+            'points' => $welcomeBonus,
         ]);
 
         // Catat welcome bonus
-        LoyaltyLog::create([
-            'customer_id' => $customer->id,
-            'type' => 'earn_points',
-            'points_change' => 50,
-            'points_balance' => 50,
-            'description' => 'Welcome Bonus Member Baru 🎉',
-        ]);
+        if ($welcomeBonus > 0) {
+            LoyaltyLog::create([
+                'customer_id' => $customer->id,
+                'type' => 'earn_points',
+                'points_change' => $welcomeBonus,
+                'points_balance' => $welcomeBonus,
+                'description' => 'Welcome Bonus Member Baru 🎉',
+            ]);
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -216,7 +323,8 @@ class LoyaltyCardController extends Controller
             ]);
         }
 
-        return back()->with('success', "Member {$customer->name} berhasil didaftarkan dengan bonus 50 Poin!")
-                     ->with('new_member_whatsapp', $customer->whatsapp_share_url);
+        return redirect()->route('loyalty.index', ['tab' => 'members'])
+                         ->with('success', "Member {$customer->name} berhasil didaftarkan dengan bonus {$welcomeBonus} Poin!")
+                         ->with('new_member_whatsapp', $customer->whatsapp_share_url);
     }
 }

@@ -182,12 +182,16 @@ class Customer extends Model
     {
         $this->total_spent += $spentAmount;
 
+        $tierConfig = \App\Http\Controllers\LoyaltyCardController::getTierConfig();
+        $targetCloud = (float) ($tierConfig['cloud_chaser']['min_spend'] ?? 1500000);
+        $targetMaster = (float) ($tierConfig['master']['min_spend'] ?? 3500000);
+
         $currentTier = $this->tier;
         $newTier = 'Rookie';
 
-        if ($this->total_spent >= 3500000) {
+        if ($this->total_spent >= $targetMaster) {
             $newTier = 'Master';
-        } elseif ($this->total_spent >= 1500000) {
+        } elseif ($this->total_spent >= $targetCloud) {
             $newTier = 'Cloud Chaser';
         }
 

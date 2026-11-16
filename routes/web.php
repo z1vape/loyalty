@@ -45,9 +45,10 @@ Route::get('/storage/{path}', function (string $path) {
 })->where('path', '.*')->name('storage.fallback');
 
 // Dedicated Loyalty System Routes
-Route::get('/', [\App\Http\Controllers\LoyaltyCardController::class, 'index'])->name('loyalty.index');
+Route::get('/loyalty', [\App\Http\Controllers\LoyaltyCardController::class, 'index'])->name('loyalty.index');
 Route::get('/card/{token}', [\App\Http\Controllers\LoyaltyCardController::class, 'show'])->name('loyalty.card');
 Route::post('/customers/{customer}/action', [\App\Http\Controllers\LoyaltyCardController::class, 'quickAction'])->name('loyalty.action');
+Route::post('/loyalty/tiers', [\App\Http\Controllers\LoyaltyCardController::class, 'updateTiers'])->name('loyalty.tiers.update');
 Route::get('/api/loyalty/search', [\App\Http\Controllers\LoyaltyCardController::class, 'search'])->name('loyalty.search');
 Route::post('/api/loyalty/register', [\App\Http\Controllers\LoyaltyCardController::class, 'registerFast'])->name('loyalty.register');
 
@@ -71,7 +72,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/switch-store', [StoreController::class, 'switchStore'])->name('switch-store');
 
     // Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // Modular Specialized Dashboards & Modules
     Route::prefix('purchasing')->name('purchasing.')->group(function () {
@@ -252,6 +254,17 @@ Route::middleware('auth')->group(function () {
     // Store Expenses (Pengeluaran Toko)
     Route::resource('expenses', ExpenseController::class);
 
+    // Finance: Hutang Antar Cabang (Inter-Branch Debts & Settlements)
+    Route::prefix('finance/interbranch-debts')->name('finance.interbranch-debts.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\InterBranchDebtController::class, 'index'])->name('index');
+        Route::post('/loan', [\App\Http\Controllers\InterBranchDebtController::class, 'storeDirectLoan'])->name('store-loan');
+        Route::post('/{debt}/pay', [\App\Http\Controllers\InterBranchDebtController::class, 'storePayment'])->name('store-payment');
+        Route::delete('/payments/{payment}', [\App\Http\Controllers\InterBranchDebtController::class, 'destroyPayment'])->name('destroy-payment');
+        Route::delete('/{debt}', [\App\Http\Controllers\InterBranchDebtController::class, 'destroy'])->name('destroy');
+        Route::post('/link-expense/{expense}', [\App\Http\Controllers\InterBranchDebtController::class, 'linkLegacyExpense'])->name('link-expense');
+        Route::get('/store-accounts/{store}', [\App\Http\Controllers\InterBranchDebtController::class, 'getStorePaymentAccounts'])->name('store-accounts');
+    });
+
     // Master Data: Users
     Route::resource('users', UserController::class);
 
@@ -278,20 +291,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/master-data', [MasterDataController::class, 'index'])->name('master-data.index');
 
     // Executive BI: Store Performance Report
-    Route::get('/reports/store-performance',        [StorePerformanceReportController::class, 'index'])->name('reports.store-performance');
+    Route::get('/reports/store-performance', [StorePerformanceReportController::class, 'index'])->name('reports.store-performance');
     Route::get('/reports/store-performance/export', [StorePerformanceReportController::class, 'export'])->name('reports.store-performance.export');
 
     // Reports Hub & Detail Reports
-    Route::get('/reports',             [ReportController::class, 'index'])->name('reports.index');
-    Route::get('/reports/by-sku',        [ReportController::class, 'bySku'])->name('reports.by-sku');
-    Route::get('/reports/by-sku/export',        [ReportController::class, 'exportBySku'])->name('reports.by-sku.export');
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/by-sku', [ReportController::class, 'bySku'])->name('reports.by-sku');
+    Route::get('/reports/by-sku/export', [ReportController::class, 'exportBySku'])->name('reports.by-sku.export');
     Route::get('/reports/by-sku/export-detail', [ReportController::class, 'exportDetail'])->name('reports.by-sku.export-detail');
     Route::get('/reports/by-category', [ReportController::class, 'byCategory'])->name('reports.by-category');
-    Route::get('/reports/by-staff',    [ReportController::class, 'byStaff'])->name('reports.by-staff');
-    Route::get('/reports/top-suppliers',        [ReportController::class, 'topSuppliers'])->name('reports.top-suppliers');
+    Route::get('/reports/by-staff', [ReportController::class, 'byStaff'])->name('reports.by-staff');
+    Route::get('/reports/top-suppliers', [ReportController::class, 'topSuppliers'])->name('reports.top-suppliers');
     Route::get('/reports/top-suppliers/export', [ReportController::class, 'exportTopSuppliers'])->name('reports.top-suppliers.export');
-    Route::get('/reports/low-stock',            [ReportController::class, 'lowStock'])->name('reports.low-stock');
-    Route::get('/reports/low-stock/export',     [ReportController::class, 'exportLowStock'])->name('reports.low-stock.export');
+    Route::get('/reports/low-stock', [ReportController::class, 'lowStock'])->name('reports.low-stock');
+    Route::get('/reports/low-stock/export', [ReportController::class, 'exportLowStock'])->name('reports.low-stock.export');
 
     // Accounting: Chart of Accounts, Journals & General Ledger
     Route::get('/accounting/accounts', [AccountController::class, 'index'])->name('accounting.accounts.index');
@@ -358,10 +371,10 @@ Route::get('/api/products', function (\Illuminate\Http\Request $request) {
 
     if ($request->has('search') && !empty($request->search)) {
         $search = $request->search;
-        $query->where(function($q) use ($search) {
+        $query->where(function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
-              ->orWhere('sku', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%");
+                ->orWhere('sku', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
         });
     }
 
@@ -572,7 +585,7 @@ Route::get('/run-migration-auto-sync', function () {
                     // Ensure stock_movements payment_method also matches
                     \Illuminate\Support\Facades\DB::table('stock_movements')
                         ->where('reference_number', $sale->reference_number)
-                        ->where(function($q) use ($finalMethod) {
+                        ->where(function ($q) use ($finalMethod) {
                             $q->whereNull('payment_method')->orWhere('payment_method', '!=', $finalMethod);
                         })
                         ->update(['payment_method' => $finalMethod]);
@@ -657,8 +670,8 @@ Route::get('/run-migration-auto-sync', function () {
                         $sub->whereNull('notes')
                             ->orWhere(function ($n) {
                                 $n->where('notes', 'NOT LIKE', '%[DIBATALKAN%')
-                                  ->where('notes', 'NOT LIKE', '%BATAL%')
-                                  ->where('notes', 'NOT LIKE', '%VOID%');
+                                    ->where('notes', 'NOT LIKE', '%BATAL%')
+                                    ->where('notes', 'NOT LIKE', '%VOID%');
                             });
                     })
                     ->pluck('reference_number')
@@ -669,7 +682,7 @@ Route::get('/run-migration-auto-sync', function () {
             $cancelledMovRefs = \Illuminate\Support\Facades\DB::table('stock_movements')
                 ->where(function ($q) {
                     $q->whereIn('status', ['cancelled', 'canceled', 'batal', 'void'])
-                      ->orWhere('notes', 'LIKE', '%[DIBATALKAN%');
+                        ->orWhere('notes', 'LIKE', '%[DIBATALKAN%');
                 })
                 ->pluck('reference_number')->filter()->unique();
 
@@ -683,9 +696,9 @@ Route::get('/run-migration-auto-sync', function () {
             $cancelledSaleRefs = \App\Models\Sale::withoutGlobalScopes()
                 ->where(function ($q) {
                     $q->whereIn('status', ['cancelled', 'canceled', 'batal', 'void'])
-                      ->orWhereNotNull('cancelled_at')
-                      ->orWhereNotNull('cancellation_reason')
-                      ->orWhere('notes', 'LIKE', '%[DIBATALKAN%');
+                        ->orWhereNotNull('cancelled_at')
+                        ->orWhereNotNull('cancellation_reason')
+                        ->orWhere('notes', 'LIKE', '%[DIBATALKAN%');
                 })
                 ->pluck('reference_number')->filter()->unique();
 
@@ -861,11 +874,11 @@ Route::get('/run-migration-auto-sync', function () {
                 ->where('type', 'in')
                 ->where(function ($q) {
                     $q->whereNull('payment_method')
-                      ->orWhereNotIn(\Illuminate\Support\Facades\DB::raw('LOWER(payment_method)'), ['tempo', 'hutang', 'credit']);
+                        ->orWhereNotIn(\Illuminate\Support\Facades\DB::raw('LOWER(payment_method)'), ['tempo', 'hutang', 'credit']);
                 })
                 ->where(function ($q) {
                     $q->whereNull('payment_status')
-                      ->orWhere('payment_status', '!=', 'partial');
+                        ->orWhere('payment_status', '!=', 'partial');
                 })
                 ->update([
                     'payment_status' => 'paid',
@@ -898,7 +911,8 @@ Route::get('/run-migration-auto-sync', function () {
             $allSuppliers = $existingMovementSuppliers->concat($existingDateSuppliers);
             foreach ($allSuppliers as $sup) {
                 $name = trim($sup->supplier_name);
-                if ($name === '') continue;
+                if ($name === '')
+                    continue;
                 $exists = \Illuminate\Support\Facades\DB::table('settings')
                     ->where('type', 'supplier')
                     ->where('value', $name)
@@ -945,7 +959,8 @@ Route::get('/run-migration-auto-sync', function () {
                 \Illuminate\Support\Facades\DB::table('stores')->update(['auto_cash_to_bank' => true]);
                 $results[] = 'Ensured auto_cash_to_bank is enabled for all stores';
             }
-        } catch (\Throwable $t) {}
+        } catch (\Throwable $t) {
+        }
 
         // 5g. Ensure default Shift and Attendance Statuses are seeded
         try {
@@ -958,6 +973,17 @@ Route::get('/run-migration-auto-sync', function () {
             }
         } catch (\Throwable $t) {
             $results[] = 'Shift & Attendance Status seed note: ' . $t->getMessage();
+        }
+
+        // 5h. Repair and normalize Inter-Branch Debts
+        try {
+            \Illuminate\Support\Facades\Artisan::call('accounting:repair-interbranch');
+            $repairOutput = trim(\Illuminate\Support\Facades\Artisan::output());
+            if ($repairOutput) {
+                $results[] = 'Repair Inter-Branch: ' . $repairOutput;
+            }
+        } catch (\Throwable $t) {
+            $results[] = 'Repair Inter-Branch note: ' . $t->getMessage();
         }
 
         // 6. Clear application caches & reset opcache
