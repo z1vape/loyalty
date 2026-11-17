@@ -96,13 +96,67 @@
             transform: rotateY(0deg);
         }
 
-        /* SISI BELAKANG */
+        /* SISI BELAKANG (MATCH MECHA CYBERPUNK DESIGN SYSTEM) */
         .card-back {
-            background: linear-gradient(145deg, #10141f 0%, #080a10 50%, #131a27 100%);
-            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: radial-gradient(circle at 50% 15%, #181d28 0%, #0d1017 50%, #05070a 100%);
+            border: 1.5px solid rgba(255, 255, 255, 0.22);
             transform: rotateY(180deg);
             z-index: 1;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 30px rgba(0, 0, 0, 0.95);
+        }
+
+        .card-back-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 16px 16px, 32px 32px, 32px 32px;
+            pointer-events: none;
+            opacity: 0.85;
+        }
+
+        /* Tech Corner Brackets */
+        .mecha-bracket-tl {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 12px;
+            height: 12px;
+            border-top: 1.5px solid rgba(56, 189, 248, 0.7);
+            border-left: 1.5px solid rgba(56, 189, 248, 0.7);
+            pointer-events: none;
+        }
+        .mecha-bracket-tr {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 12px;
+            height: 12px;
+            border-top: 1.5px solid rgba(56, 189, 248, 0.7);
+            border-right: 1.5px solid rgba(56, 189, 248, 0.7);
+            pointer-events: none;
+        }
+        .mecha-bracket-bl {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            width: 12px;
+            height: 12px;
+            border-bottom: 1.5px solid rgba(56, 189, 248, 0.7);
+            border-left: 1.5px solid rgba(56, 189, 248, 0.7);
+            pointer-events: none;
+        }
+        .mecha-bracket-br {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 12px;
+            height: 12px;
+            border-bottom: 1.5px solid rgba(56, 189, 248, 0.7);
+            border-right: 1.5px solid rgba(56, 189, 248, 0.7);
+            pointer-events: none;
         }
 
         /* KILAU PERAK / PURE SILVER-WHITE METALLIC SHINE (Hanya di Depan) */
@@ -255,94 +309,149 @@
                 </div>
 
                 {{-- ==================== SISI BELAKANG (BACK: SALDO POIN MEMBER & BENEFIT) ==================== --}}
-                <div class="card-face card-back flex flex-col justify-between p-4 sm:p-5 relative select-none">
-                    {{-- Cyber mecha background texture --}}
-                    <div class="absolute inset-0 opacity-10 pointer-events-none" 
-                         style="background-image: radial-gradient(rgba(255,255,255,0.25) 1px, transparent 1px); background-size: 14px 14px;"></div>
-                    
-                    {{-- Laser Magnetic Strip Mecha --}}
-                    <div class="absolute top-0 left-0 right-0 h-8 sm:h-9 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-700/70 flex items-center justify-between px-4 overflow-hidden">
-                        <span class="font-code text-[8px] sm:text-[9px] text-slate-500 tracking-widest uppercase truncate">
-                            Z1 VAPE OFFICIAL DIGITAL MEMBERSHIP PROTOCOL
-                        </span>
-                        <span class="font-mono text-[9px] text-emerald-400 font-bold">
-                            {{ $customer->member_code }}
+                <div class="card-face card-back flex flex-col justify-between p-3.5 sm:p-5 relative select-none">
+                    {{-- Cyber mecha background texture & grid --}}
+                    <div class="card-back-grid"></div>
+
+                    {{-- Chamfered Mecha Outer Corner Brackets --}}
+                    <div class="mecha-bracket-tl"></div>
+                    <div class="mecha-bracket-tr"></div>
+                    <div class="mecha-bracket-bl"></div>
+                    <div class="mecha-bracket-br"></div>
+
+                    {{-- Metallic Shine Beam (Pure Silver-White Mecha Sweep) --}}
+                    <div class="card-shine-beam"></div>
+
+                    {{-- Interactive Specular Light Highlight on Back --}}
+                    <div id="specularGleamBack" class="card-specular-glare"></div>
+
+                    {{-- Sparkle Stars at Silver Highlights --}}
+                    <div class="sparkle top-[24%] left-[16%]" style="animation-delay: 0.6s;"></div>
+                    <div class="sparkle top-[26%] right-[18%]" style="animation-delay: 2.2s;"></div>
+                    <div class="sparkle bottom-[18%] left-[28%]" style="animation-delay: 3.4s;"></div>
+
+                    {{-- Top Obsidian Holographic Magnetic Stripe --}}
+                    <div class="absolute top-0 left-0 right-0 h-8 sm:h-9 bg-gradient-to-r from-neutral-950 via-slate-900 to-neutral-950 border-b border-white/10 flex items-center justify-between px-4 sm:px-5 overflow-hidden shadow-inner">
+                        <div class="absolute inset-0 opacity-20 pointer-events-none" 
+                             style="background: linear-gradient(90deg, transparent 0%, rgba(236,72,153,0.3) 20%, rgba(56,189,248,0.3) 40%, rgba(52,211,153,0.3) 60%, rgba(251,191,36,0.3) 80%, transparent 100%);"></div>
+                        <div class="relative z-10 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span class="font-code text-[8px] sm:text-[9px] text-slate-400 tracking-widest uppercase font-semibold">
+                                Z1 DIGITAL MEMBERSHIP PROTOCOL • VOL.2
+                            </span>
+                        </div>
+                        <span class="relative z-10 font-mono text-[9px] sm:text-[10px] text-emerald-400 font-bold tracking-wider">
+                            🔒 {{ $customer->member_code }}
                         </span>
                     </div>
 
-                    {{-- Header Box di Bawah Magnetic Strip --}}
-                    <div class="relative z-10 mt-6 sm:mt-7 flex items-center justify-between">
-                        <div class="flex items-center gap-2.5">
-                            {{-- Mecha Smart Chip Graphic --}}
-                            <div class="w-9 h-6 sm:w-10 sm:h-7 rounded bg-gradient-to-br from-amber-200/30 via-amber-400/20 to-amber-600/30 border border-amber-300/40 relative flex items-center justify-center shadow-inner">
-                                <div class="w-6 h-3 border border-amber-400/40 rounded-xs"></div>
+                    {{-- Header Box di Bawah Magnetic Strip: EMV Chip + Member Identity + Tier Badge --}}
+                    <div class="relative z-10 mt-6 sm:mt-7 flex items-center justify-between px-0.5">
+                        <div class="flex items-center gap-2.5 sm:gap-3">
+                            {{-- Realistic 3D EMV Gold Smart Chip --}}
+                            <div class="relative w-10 h-6.5 sm:w-11 sm:h-7.5 rounded bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 p-[1px] shadow-[0_0_12px_rgba(245,158,11,0.3)] flex items-center justify-center shrink-0">
+                                <div class="w-full h-full rounded-[3px] bg-gradient-to-br from-[#dfa837] via-[#ca8a04] to-[#854d0e] relative overflow-hidden flex items-center justify-center">
+                                    <div class="absolute inset-x-0 top-1/2 h-[1px] bg-amber-950/50"></div>
+                                    <div class="absolute inset-y-0 left-1/3 w-[1px] bg-amber-950/50"></div>
+                                    <div class="absolute inset-y-0 right-1/3 w-[1px] bg-amber-950/50"></div>
+                                    <div class="w-3.5 h-3 rounded-xs border border-amber-950/50 bg-amber-300/35"></div>
+                                </div>
                             </div>
-                            <div>
-                                <span class="text-[9px] sm:text-[10px] font-orbitron font-bold text-slate-400 uppercase tracking-wider block leading-tight">
+
+                            {{-- Member Name & Code --}}
+                            <div class="min-w-0">
+                                <span class="text-[8px] sm:text-[9px] font-orbitron font-bold text-slate-400 uppercase tracking-widest block leading-tight">
                                     MEMBER EXCLUSIVE
                                 </span>
-                                <span class="text-[10px] sm:text-xs font-bold text-white font-code uppercase leading-tight truncate block max-w-[150px] sm:max-w-[200px]">
+                                <span class="text-xs sm:text-sm font-extrabold text-white font-orbitron uppercase tracking-wider leading-tight truncate block max-w-[160px] sm:max-w-[210px]"
+                                      style="text-shadow: 0 1px 4px rgba(0,0,0,0.95), 0 0 10px rgba(255,255,255,0.15);">
                                     {{ $customer->name }}
                                 </span>
                             </div>
                         </div>
 
-                        <span class="px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase font-orbitron border {{ $tierBadgeClass }}">
+                        {{-- Tier Badge Matching Front --}}
+                        <span class="px-2.5 sm:px-3 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase font-orbitron border {{ $tierBadgeClass }} shadow-[0_0_12px_rgba(0,0,0,0.5)] shrink-0">
                             ★ {{ $customer->tier }}
                         </span>
                     </div>
 
-                    {{-- HERO SALDO POIN & POTONGAN BELANJA --}}
-                    <div class="relative z-10 grid grid-cols-2 gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl bg-slate-950/70 border border-slate-700/70 backdrop-blur-md shadow-inner my-auto">
-                        <div>
-                            <span class="text-[9px] sm:text-[10px] font-orbitron font-bold text-slate-400 uppercase tracking-widest block mb-0.5 leading-none">
-                                SALDO POIN MEMBER
-                            </span>
-                            <div class="flex items-baseline gap-1">
-                                <span class="font-orbitron font-black text-lg sm:text-xl text-white tracking-tight leading-none drop-shadow">
-                                    Rp {{ number_format($customer->points, 0, ',', '.') }}
+                    {{-- HERO CYBER HUD: SALDO POIN & BATAS TUKAR POIN --}}
+                    <div class="relative z-10 my-auto p-3 sm:p-3.5 rounded-xl bg-gradient-to-b from-slate-900/85 via-slate-950/90 to-black/95 border border-white/15 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_12px_28px_rgba(0,0,0,0.7)]">
+                        {{-- Futuristic Corner Reticles --}}
+                        <div class="absolute top-1.5 left-1.5 w-2 h-2 border-t-2 border-l-2 border-cyan-400/80 pointer-events-none"></div>
+                        <div class="absolute top-1.5 right-1.5 w-2 h-2 border-t-2 border-r-2 border-cyan-400/80 pointer-events-none"></div>
+                        <div class="absolute bottom-1.5 left-1.5 w-2 h-2 border-b-2 border-l-2 border-cyan-400/80 pointer-events-none"></div>
+                        <div class="absolute bottom-1.5 right-1.5 w-2 h-2 border-b-2 border-r-2 border-cyan-400/80 pointer-events-none"></div>
+
+                        <div class="grid grid-cols-2 gap-2 sm:gap-4 items-center">
+                            {{-- Saldo Poin Member --}}
+                            <div>
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    <span class="text-[8px] sm:text-[9px] font-orbitron font-bold text-slate-300 uppercase tracking-widest block leading-none">
+                                        SALDO POIN MEMBER
+                                    </span>
+                                </div>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="font-orbitron font-black text-xl sm:text-2xl text-white tracking-tight leading-none"
+                                          style="text-shadow: 0 0 16px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.9);">
+                                        Rp {{ number_format($customer->points, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                                <span class="text-[7.5px] sm:text-[8.5px] text-emerald-400 font-medium block mt-1 tracking-wide">
+                                    {{ number_format($customer->points, 0, ',', '.') }} Poin • Siap Pakai di Kasir
                                 </span>
                             </div>
-                            <span class="text-[8px] text-slate-400 block mt-0.5">1 Poin = Rp 1</span>
-                        </div>
 
-                        <div class="text-right">
-                            <span class="text-[9px] sm:text-[10px] font-medium text-slate-400 uppercase tracking-wider block mb-0.5 leading-none">
-                                Maks. Tukar Poin
-                            </span>
-                            <div class="font-code font-bold text-sm sm:text-base text-emerald-400 tracking-wide leading-none drop-shadow">
-                                Rp {{ number_format($currentTierModel->max_redeem_rp ?? 30000, 0, ',', '.') }}
+                            {{-- Batas Tukar Poin Kasir --}}
+                            <div class="text-right border-l border-white/10 pl-2 sm:pl-3">
+                                <span class="text-[8px] sm:text-[9px] font-orbitron font-semibold text-slate-400 uppercase tracking-wider block mb-1 leading-none">
+                                    BATAS TUKAR POIN
+                                </span>
+                                <div class="font-orbitron font-bold text-base sm:text-lg text-emerald-400 tracking-tight leading-none"
+                                     style="text-shadow: 0 0 12px rgba(52,211,153,0.35);">
+                                    Rp {{ number_format($currentTierModel->max_redeem_rp ?? 30000, 0, ',', '.') }}
+                                </div>
+                                <span class="text-[7.5px] sm:text-[8.5px] text-slate-400 block mt-1">
+                                    Maks. Potongan / Transaksi
+                                </span>
                             </div>
-                            <span class="text-[8px] text-slate-400 block mt-0.5">/ transaksi kasir</span>
                         </div>
                     </div>
 
-                    {{-- Footer Info: Tier Perks & Next Tier Progress --}}
+                    {{-- Footer Info: Tier Benefit & Progress --}}
                     <div class="relative z-10 space-y-1.5 text-slate-400 text-[10px]">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-1.5">
                                 @if(($currentTierModel->discount_nominal ?? 0) > 0)
-                                    <span class="px-2 py-0.5 rounded bg-indigo-950/70 border border-indigo-800/60 text-indigo-300 font-mono font-bold text-[9px]">
-                                        Diskon Belanja Rp {{ number_format($currentTierModel->discount_nominal, 0, ',', '.') }}
+                                    <span class="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 font-mono font-bold text-[8.5px] sm:text-[9px] flex items-center gap-1 shadow-xs">
+                                        <span class="material-symbols-outlined text-[10px] sm:text-[11px] text-emerald-400">sell</span>
+                                        <span>Diskon Rp {{ number_format($currentTierModel->discount_nominal, 0, ',', '.') }}</span>
+                                    </span>
+                                @else
+                                    <span class="text-[8.5px] sm:text-[9px] font-mono text-slate-400 flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400/80 animate-pulse"></span>
+                                        <span>Benefit Aktif Tier {{ $customer->tier }}</span>
                                     </span>
                                 @endif
                             </div>
                             
                             {{-- Flip Back Pill Button --}}
-                            <div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-900 border border-slate-700 text-[9px] font-bold text-slate-300">
-                                <span class="material-symbols-outlined text-[11px] text-amber-400">qr_code</span>
+                            <div class="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-900/90 border border-white/20 text-[8.5px] sm:text-[9px] font-bold text-slate-200 shadow-sm transition hover:bg-slate-800">
+                                <span class="material-symbols-outlined text-[11px] text-amber-400">qr_code_2</span>
                                 <span>Lihat QR Code ↺</span>
                             </div>
                         </div>
 
                         @if(!empty($nextTierModel) && ($amountToNextTier ?? 0) > 0)
-                            <div class="pt-1.5 border-t border-slate-800/80">
-                                <div class="flex items-center justify-between text-[9px] mb-1">
-                                    <span>Menuju Tier <strong class="text-white">{{ $nextTierModel->name }}</strong>:</span>
-                                    <span class="text-amber-400 font-mono font-bold">Rp {{ number_format($amountToNextTier, 0, ',', '.') }} lagi</span>
+                            <div class="pt-1.5 border-t border-white/10">
+                                <div class="flex items-center justify-between text-[8.5px] sm:text-[9px] mb-1 font-mono">
+                                    <span class="text-slate-300">Menuju Tier <strong class="text-white font-orbitron">{{ $nextTierModel->name }}</strong>:</span>
+                                    <span class="text-amber-400 font-bold">Rp {{ number_format($amountToNextTier, 0, ',', '.') }} lagi</span>
                                 </div>
-                                <div class="w-full bg-slate-800 rounded-full h-1 overflow-hidden">
-                                    <div class="bg-gradient-to-r from-emerald-500 to-amber-400 h-1 rounded-full" style="width: {{ $tierProgressPercent }}%"></div>
+                                <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden p-[1px] border border-white/10">
+                                    <div class="bg-gradient-to-r from-emerald-500 via-cyan-400 to-amber-400 h-full rounded-full shadow-[0_0_8px_rgba(52,211,153,0.5)]" style="width: {{ $tierProgressPercent }}%"></div>
                                 </div>
                             </div>
                         @endif
@@ -376,6 +485,7 @@
 
         const flipper = document.getElementById('cardFlipper');
         const glare = document.getElementById('specularGleam');
+        const glareBack = document.getElementById('specularGleamBack');
         const hintBtn = document.getElementById('flip-hint-btn');
         const hintText = document.getElementById('flip-hint-text');
 
@@ -431,10 +541,15 @@
 
                 updateCardTransform();
 
-                // Specular light position (visible only on front)
+                // Specular light position for both front and back
                 if (!isFlipped && glare) {
                     glare.style.opacity = '1';
                     glare.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.4) 0%, transparent 60%)`;
+                    if (glareBack) glareBack.style.opacity = '0';
+                } else if (isFlipped && glareBack) {
+                    glareBack.style.opacity = '1';
+                    glareBack.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.3) 0%, transparent 60%)`;
+                    if (glare) glare.style.opacity = '0';
                 }
             }
 
@@ -443,6 +558,7 @@
                 tiltY = 0;
                 updateCardTransform();
                 if (glare) glare.style.opacity = '0';
+                if (glareBack) glareBack.style.opacity = '0';
             }
 
             const wrapper = document.getElementById('cardWrapper');

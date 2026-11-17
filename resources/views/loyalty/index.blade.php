@@ -635,14 +635,10 @@
                                 <p class="text-xs text-slate-500">Poin selamat datang yang langsung diberikan saat pelanggan pertama kali mendaftar sebagai member.</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-xs text-slate-500 font-bold">Rp</span>
-                                <input type="number" name="welcome_bonus" value="{{ $welcomeBonus }}" min="0" max="100000" step="500"
-                                    class="w-28 px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:border-[#006c49] text-center font-bold" />
-                                <span class="text-xs font-semibold text-slate-600">Poin</span>
-                            </div>
-                                <input type="number" name="welcome_bonus" value="{{ $welcomeBonus }}" min="0" max="1000"
-                                    class="w-28 px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:border-[#006c49] text-center font-bold" />
-                                <span class="text-xs font-semibold text-slate-600">Poin</span>
+                                <input type="number" name="welcome_bonus" value="{{ $welcomeBonus }}" min="0" max="100000" step="100"
+                                    class="w-32 px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:border-[#006c49] text-center font-bold" />
+                                <span class="text-xs font-bold text-slate-700">Poin</span>
+                                <span class="text-xs text-slate-400 font-mono">(Rp {{ number_format($welcomeBonus, 0, ',', '.') }})</span>
                             </div>
                         </div>
 
