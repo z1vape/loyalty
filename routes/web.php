@@ -411,6 +411,9 @@ Route::prefix('api/pos')->group(function () {
     Route::post('/sales/{id}/cancel', [\App\Http\Controllers\Api\PosApiController::class, 'cancelSale']);
     Route::match(['put', 'patch', 'post'], '/sales/{id}/payment-method', [\App\Http\Controllers\Api\PosApiController::class, 'updatePaymentMethod']);
     Route::match(['put', 'patch', 'post'], '/sales/{id}/discount', [\App\Http\Controllers\Api\PosApiController::class, 'updateDiscount']);
+    Route::get('/loyalty/search', [\App\Http\Controllers\Api\PosApiController::class, 'loyaltySearch']);
+    Route::post('/loyalty/register', [\App\Http\Controllers\Api\PosApiController::class, 'loyaltyRegister']);
+    Route::get('/loyalty/category-rules', [\App\Http\Controllers\Api\PosApiController::class, 'loyaltyCategoryRules']);
 });
 
 Route::get('/run-migration-auto-sync', function () {

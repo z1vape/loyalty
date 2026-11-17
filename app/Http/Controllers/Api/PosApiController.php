@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use App\Models\Customer;
+use App\Models\LoyaltyCategoryRule;
+use App\Models\LoyaltyLog;
+use App\Models\LoyaltyTier;
 use App\Models\MovementDate;
 use App\Models\Product;
 use App\Models\Sale;
@@ -184,7 +188,11 @@ class PosApiController extends Controller
             'store_id' => 'required|exists:stores,id',
             'user_id' => 'nullable|exists:users,id',
             'cashier_name' => 'nullable|string|max:100',
+            'customer_id' => 'nullable|exists:customers,id',
             'customer_name' => 'nullable|string|max:150',
+            'points_redeemed' => 'nullable|numeric|min:0',
+            'points_discount' => 'nullable|numeric|min:0',
+            'tier_discount' => 'nullable|numeric|min:0',
             'payment_method' => 'required|string|in:cash,qris,transfer,debit,credit,split',
             'amount_paid' => 'required|numeric|min:0',
             'change_amount' => 'nullable|numeric|min:0',
@@ -291,13 +299,30 @@ class PosApiController extends Controller
                 $saleNote = "[POS - {$cashierName}] Bayar: {$paymentMethodLabel} (Uang: Rp{$paidFormatted}, Kembali: Rp{$changeFormatted}){$customNote}";
             }
 
+            // Customer & Loyalty Processing
+            $customerId = $validated['customer_id'] ?? null;
+            $customer = $customerId ? Customer::lockForUpdate()->find($customerId) : null;
+            $customerName = $customer ? $customer->name : (!empty($validated['customer_name']) ? $validated['customer_name'] : 'Pelanggan Umum');
+            $pointsRedeemed = (int) ($validated['points_redeemed'] ?? 0);
+            $pointsDiscount = (float) ($validated['points_discount'] ?? 0);
+            $tierDiscount = (float) ($validated['tier_discount'] ?? 0);
+
+            $categoryRules = LoyaltyCategoryRule::all()->keyBy(fn($r) => strtolower(trim($r->category_name)));
+            $totalPointsEarned = 0;
+            $liquidBottlesCount = 0;
+
             // 3. Create Sale
             $sale = Sale::withoutGlobalScopes()->create([
                 'store_id' => $storeId,
                 'reference_number' => $refNumber,
                 'sale_date' => Carbon::now()->toDateString(),
-                'customer_name' => !empty($validated['customer_name']) ? $validated['customer_name'] : 'Pelanggan Umum',
+                'customer_id' => $customer?->id,
+                'customer_name' => $customerName,
                 'total_amount' => $validated['total_amount'],
+                'points_earned' => 0, // Updated after item loop
+                'points_redeemed' => $pointsRedeemed,
+                'points_discount_amount' => $pointsDiscount,
+                'liquid_stamps_earned' => 0,
                 'notes' => $saleNote,
                 'payment_method' => strtolower($validated['payment_method'] ?? 'cash'),
                 'payment_splits' => $validated['payment_splits'] ?? null,
@@ -323,6 +348,26 @@ class PosApiController extends Controller
             $receiptItems = [];
             foreach ($validated['items'] as $itemData) {
                 $product = Product::withoutGlobalScopes()->findOrFail($itemData['product_id']);
+
+                // Track liquid items for stamp card
+                $categoryName = strtolower($product->category ?? '');
+                $productName = strtolower($product->name ?? '');
+                if (str_contains($categoryName, 'liquid') || str_contains($productName, 'liquid') || str_contains($categoryName, 'saltnic') || str_contains($categoryName, 'freebase')) {
+                    $liquidBottlesCount += (int) $itemData['quantity'];
+                }
+
+                // Calculate Category Points
+                if ($customer) {
+                    $catKey = strtolower(trim($product->category ?? ''));
+                    $rule = $categoryRules->get($catKey);
+                    $qty = (int) $itemData['quantity'];
+                    if ($rule && $rule->is_active) {
+                        $ptsPerItem = (int) ($rule->points_per_item ?? 1);
+                        $totalPointsEarned += ($ptsPerItem * $qty);
+                    } else {
+                        $totalPointsEarned += (1 * $qty);
+                    }
+                }
 
                 // Create Sale Item
                 $saleItem = $sale->items()->create([
@@ -364,6 +409,74 @@ class PosApiController extends Controller
                 ];
             }
 
+            // Update Sale with calculated points & stamps
+            $sale->update([
+                'points_earned' => $totalPointsEarned,
+                'liquid_stamps_earned' => $liquidBottlesCount,
+            ]);
+
+            // Process Customer Loyalty updates
+            if ($customer) {
+                // 1. Deduct redeemed points
+                if ($pointsRedeemed > 0) {
+                    $customer->decrement('points', $pointsRedeemed);
+                    LoyaltyLog::create([
+                        'customer_id' => $customer->id,
+                        'sale_id' => $sale->id,
+                        'store_id' => $storeId,
+                        'type' => 'redeem_points',
+                        'points_change' => -$pointsRedeemed,
+                        'points_balance' => $customer->points,
+                        'description' => "Penukaran Poin di Kasir POS {$refNumber} (Potongan Rp " . number_format($pointsDiscount, 0, ',', '.') . ")",
+                    ]);
+                }
+
+                // 2. Add earned points
+                if ($totalPointsEarned > 0) {
+                    $customer->increment('points', $totalPointsEarned);
+                    LoyaltyLog::create([
+                        'customer_id' => $customer->id,
+                        'sale_id' => $sale->id,
+                        'store_id' => $storeId,
+                        'type' => 'earn_points',
+                        'points_change' => $totalPointsEarned,
+                        'points_balance' => $customer->points,
+                        'description' => "Perolehan Poin Belanja POS {$refNumber}",
+                    ]);
+                }
+
+                // 3. Liquid stamps
+                if ($liquidBottlesCount > 0) {
+                    $customer->addLiquidStamps($liquidBottlesCount);
+                    LoyaltyLog::create([
+                        'customer_id' => $customer->id,
+                        'sale_id' => $sale->id,
+                        'store_id' => $storeId,
+                        'type' => 'earn_stamp',
+                        'stamps_change' => $liquidBottlesCount,
+                        'stamps_balance' => $customer->liquid_stamp_count,
+                        'description' => "Stempel Pembelian {$liquidBottlesCount} Botol Liquid POS {$refNumber}",
+                    ]);
+                }
+
+                // 4. Accumulate total_spent & check tier upgrade
+                $customer->increment('total_spent', (float) $validated['total_amount']);
+                $newTier = LoyaltyTier::where('min_spend', '<=', $customer->total_spent)
+                    ->orderBy('level', 'desc')
+                    ->first();
+                if ($newTier && $newTier->name !== $customer->tier) {
+                    $oldTier = $customer->tier;
+                    $customer->update(['tier' => $newTier->name]);
+                    LoyaltyLog::create([
+                        'customer_id' => $customer->id,
+                        'sale_id' => $sale->id,
+                        'store_id' => $storeId,
+                        'type' => 'tier_upgrade',
+                        'description' => "Selamat! Level Tier naik dari {$oldTier} ke {$newTier->name} 🚀",
+                    ]);
+                }
+            }
+
             // Post double-entry accounting journal
             app(\App\Services\AccountingService::class)->recordSaleJournal($sale);
 
@@ -380,7 +493,12 @@ class PosApiController extends Controller
                     'store_address' => $store->address,
                     'store_phone' => $store->phone,
                     'cashier_name' => $cashierName,
+                    'customer_id' => $customer?->id,
                     'customer_name' => $sale->customer_name,
+                    'customer_tier' => $customer?->tier,
+                    'points_earned' => $totalPointsEarned,
+                    'points_redeemed' => $pointsRedeemed,
+                    'points_balance' => $customer?->points,
                     'payment_method' => $paymentMethodLabel,
                     'payment_splits' => $sale->payment_splits,
                     'total_amount' => (float) $validated['total_amount'],
@@ -1593,6 +1711,39 @@ class PosApiController extends Controller
                     ];
                 }),
             ]
+        ]);
+    }
+
+    /**
+     * Search customer by barcode scan, member_code, or phone for POS
+     */
+    public function loyaltySearch(Request $request): JsonResponse
+    {
+        return app(\App\Http\Controllers\LoyaltyCardController::class)->search($request);
+    }
+
+    /**
+     * Fast registration for customer at cashier POS
+     */
+    public function loyaltyRegister(Request $request): JsonResponse
+    {
+        return app(\App\Http\Controllers\LoyaltyCardController::class)->registerFast($request);
+    }
+
+    /**
+     * Get active category points rules for POS cart calculation
+     */
+    public function loyaltyCategoryRules(): JsonResponse
+    {
+        $rules = LoyaltyCategoryRule::where('is_active', true)->get();
+        $rulesMap = [];
+        foreach ($rules as $r) {
+            $rulesMap[strtolower(trim($r->category_name))] = (int) $r->points_per_item;
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $rulesMap
         ]);
     }
 }
