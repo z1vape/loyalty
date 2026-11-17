@@ -325,7 +325,11 @@
                                 <span class="px-1.5 py-0.5 rounded bg-emerald-950/70 border border-emerald-800/60 text-emerald-400 font-mono font-bold text-[9px]">
                                     {{ $currentTierModel->point_multiplier ?? 1 }}x Poin
                                 </span>
-                                @if(($currentTierModel->discount_percent ?? 0) > 0)
+                                @if(($currentTierModel->discount_nominal ?? 0) > 0)
+                                    <span class="px-1.5 py-0.5 rounded bg-indigo-950/70 border border-indigo-800/60 text-indigo-300 font-mono font-bold text-[9px]">
+                                        Diskon Rp {{ number_format($currentTierModel->discount_nominal, 0, ',', '.') }}
+                                    </span>
+                                @elseif(($currentTierModel->discount_percent ?? 0) > 0)
                                     <span class="px-1.5 py-0.5 rounded bg-indigo-950/70 border border-indigo-800/60 text-indigo-300 font-mono font-bold text-[9px]">
                                         Diskon {{ $currentTierModel->discount_percent }}%
                                     </span>

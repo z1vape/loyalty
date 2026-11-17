@@ -335,12 +335,21 @@
         // Member Tier Discount (Potongan Langsung Belanja Berdasarkan Tier)
         let tierDiscountAmount = 0;
         const tierDiscountRow = document.getElementById('summary-tier-discount-row');
-        if (activeCustomer && activeCustomer.tier_discount_percent > 0) {
-            tierDiscountAmount = Math.round(netBeforeTierDiscount * (activeCustomer.tier_discount_percent / 100));
-            if (tierDiscountRow) {
-                tierDiscountRow.classList.remove('hidden');
-                document.getElementById('summary-tier-discount-label').innerText = `Diskon Member ${activeCustomer.tier} (${activeCustomer.tier_discount_percent}%)`;
-                document.getElementById('summary-tier-discount').innerText = '-' + formatCurrency(tierDiscountAmount);
+        if (activeCustomer && (activeCustomer.tier_discount_nominal > 0 || activeCustomer.tier_discount_percent > 0)) {
+            if (activeCustomer.tier_discount_nominal > 0) {
+                tierDiscountAmount = Math.min(activeCustomer.tier_discount_nominal, netBeforeTierDiscount);
+                if (tierDiscountRow) {
+                    tierDiscountRow.classList.remove('hidden');
+                    document.getElementById('summary-tier-discount-label').innerText = `Diskon Member ${activeCustomer.tier}`;
+                    document.getElementById('summary-tier-discount').innerText = '-' + formatCurrency(tierDiscountAmount);
+                }
+            } else if (activeCustomer.tier_discount_percent > 0) {
+                tierDiscountAmount = Math.round(netBeforeTierDiscount * (activeCustomer.tier_discount_percent / 100));
+                if (tierDiscountRow) {
+                    tierDiscountRow.classList.remove('hidden');
+                    document.getElementById('summary-tier-discount-label').innerText = `Diskon Member ${activeCustomer.tier} (${activeCustomer.tier_discount_percent}%)`;
+                    document.getElementById('summary-tier-discount').innerText = '-' + formatCurrency(tierDiscountAmount);
+                }
             }
         } else {
             if (tierDiscountRow) tierDiscountRow.classList.add('hidden');
@@ -522,6 +531,7 @@
                     member_code: data.customer.member_code,
                     tier: data.customer.tier,
                     tier_badge_color: data.customer.tier_badge_color || 'emerald',
+                    tier_discount_nominal: data.customer.tier_discount_nominal || 0,
                     tier_discount_percent: data.customer.tier_discount_percent || 0,
                     tier_multiplier: data.customer.tier_multiplier || 1.0,
                     points: data.customer.points,

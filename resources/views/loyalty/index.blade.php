@@ -445,7 +445,6 @@
                                     <th class="py-3.5 px-4">Diskon Belanja</th>
                                     <th class="py-3.5 px-4">Nilai Tukar Poin</th>
                                     <th class="py-3.5 px-4">Total Member</th>
-                                    <th class="py-3.5 px-4">Benefit / Perks</th>
                                     <th class="py-3.5 px-4 text-right w-24">Aksi</th>
                                 </tr>
                             </thead>
@@ -492,12 +491,16 @@
                                             </span>
                                         </td>
                                         <td class="py-3.5 px-4">
-                                            @if($tier->discount_percent > 0)
+                                            @if(($tier->discount_nominal ?? 0) > 0)
+                                                <span class="font-mono font-bold text-indigo-700 text-xs px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200">
+                                                    Rp {{ number_format($tier->discount_nominal, 0, ',', '.') }}
+                                                </span>
+                                            @elseif(($tier->discount_percent ?? 0) > 0)
                                                 <span class="font-mono font-bold text-indigo-700 text-xs px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200">
                                                     {{ $tier->discount_percent }}%
                                                 </span>
                                             @else
-                                                <span class="text-slate-400 text-xs font-mono">0%</span>
+                                                <span class="text-slate-400 text-xs font-mono">Rp 0</span>
                                             @endif
                                         </td>
                                         <td class="py-3.5 px-4">
@@ -511,13 +514,8 @@
                                                 {{ number_format($tier->customers_count ?? 0) }} Member
                                             </span>
                                             <span class="text-[10px] text-slate-400 block">
-                                                {{ round((($tier->customers_count ?? 0) / $totalCustomers) * 100) }}% total
+                                                {{ round((($tier->customers_count ?? 0) / max($totalCustomers, 1)) * 100) }}% total
                                             </span>
-                                        </td>
-                                        <td class="py-3.5 px-4 max-w-xs">
-                                            <p class="text-xs text-slate-600 truncate" title="{{ $tier->perks }}">
-                                                {{ $tier->perks ?? '-' }}
-                                            </p>
                                         </td>
                                         <td class="py-3.5 px-4 text-right">
                                             <div class="flex items-center justify-end gap-1">
@@ -546,7 +544,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="py-10 text-center text-slate-400">
+                                        <td colspan="8" class="py-10 text-center text-slate-400">
                                             Belum ada tier yang dibuat. Klik "+ TAMBAH TIER BARU" untuk membuat tier pertama.
                                         </td>
                                     </tr>
@@ -715,11 +713,11 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
-                            Diskon Belanja Member (%) <span class="text-rose-500">*</span>
+                            Diskon Belanja Member (Rp) <span class="text-rose-500">*</span>
                         </label>
-                        <input type="number" step="0.5" min="0" max="100" name="discount_percent" required value="0"
+                        <input type="number" step="500" min="0" name="discount_nominal" required value="0" placeholder="0"
                             class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
-                        <span class="text-[10px] text-slate-400">Potongan belanja otomatis di kasir</span>
+                        <span class="text-[10px] text-slate-400">Nominal potongan langsung saat transaksi kasir</span>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
@@ -743,14 +741,6 @@
                         <option value="purple">Purple / Prestige VIP</option>
                         <option value="rose">Rose / Ruby</option>
                     </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
-                        Deskripsi Benefit / Perks
-                    </label>
-                    <textarea name="perks" rows="2" placeholder="Contoh: Diskon 5%, Multiplier 2x, Akses Produk Eksklusif"
-                        class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs text-slate-900"></textarea>
                 </div>
 
                 <div class="pt-2">
@@ -825,11 +815,11 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
-                            Diskon Belanja Member (%) <span class="text-rose-500">*</span>
+                            Diskon Belanja Member (Rp) <span class="text-rose-500">*</span>
                         </label>
-                        <input type="number" step="0.5" min="0" max="100" id="edit_discount_percent" name="discount_percent" required
+                        <input type="number" step="500" min="0" id="edit_discount_nominal" name="discount_nominal" required
                             class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
-                        <span class="text-[10px] text-slate-400">Potongan belanja otomatis di kasir</span>
+                        <span class="text-[10px] text-slate-400">Nominal potongan langsung saat transaksi kasir</span>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
@@ -853,14 +843,6 @@
                         <option value="purple">Purple / Prestige VIP</option>
                         <option value="rose">Rose / Ruby</option>
                     </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
-                        Deskripsi Benefit / Perks
-                    </label>
-                    <textarea id="edit_perks" name="perks" rows="2"
-                        class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs text-slate-900"></textarea>
                 </div>
 
                 <div class="pt-2">
@@ -1020,10 +1002,9 @@
             document.getElementById('edit_level').value = tier.level;
             document.getElementById('edit_min_spend').value = tier.min_spend;
             document.getElementById('edit_point_multiplier').value = tier.point_multiplier;
-            document.getElementById('edit_discount_percent').value = tier.discount_percent;
+            document.getElementById('edit_discount_nominal').value = tier.discount_nominal || 0;
             document.getElementById('edit_point_value_rp').value = tier.point_value_rp;
             document.getElementById('edit_badge_color').value = tier.badge_color || 'slate';
-            document.getElementById('edit_perks').value = tier.perks || '';
             document.getElementById('edit_is_default').checked = Boolean(tier.is_default);
             document.getElementById('editTierModal').classList.remove('hidden');
         }

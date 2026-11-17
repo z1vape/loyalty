@@ -122,12 +122,15 @@ class LoyaltyCardController extends Controller
             'level' => 'required|integer|min:1',
             'min_spend' => 'required|numeric|min:0',
             'point_multiplier' => 'required|numeric|min:0.1|max:10',
-            'discount_percent' => 'required|numeric|min:0|max:100',
+            'discount_nominal' => 'nullable|numeric|min:0',
+            'discount_percent' => 'nullable|numeric|min:0|max:100',
             'point_value_rp' => 'required|integer|min:1',
             'badge_color' => 'nullable|string|max:20',
             'perks' => 'nullable|string|max:500',
         ]);
 
+        $validated['discount_nominal'] = $request->input('discount_nominal', 0);
+        $validated['discount_percent'] = $request->input('discount_percent', 0);
         $validated['badge_color'] = $validated['badge_color'] ?? 'slate';
         $validated['is_default'] = $request->has('is_default');
 
@@ -151,12 +154,15 @@ class LoyaltyCardController extends Controller
             'level' => 'required|integer|min:1',
             'min_spend' => 'required|numeric|min:0',
             'point_multiplier' => 'required|numeric|min:0.1|max:10',
-            'discount_percent' => 'required|numeric|min:0|max:100',
+            'discount_nominal' => 'nullable|numeric|min:0',
+            'discount_percent' => 'nullable|numeric|min:0|max:100',
             'point_value_rp' => 'required|integer|min:1',
             'badge_color' => 'nullable|string|max:20',
             'perks' => 'nullable|string|max:500',
         ]);
 
+        $validated['discount_nominal'] = $request->input('discount_nominal', 0);
+        $validated['discount_percent'] = $request->input('discount_percent', 0);
         $validated['badge_color'] = $validated['badge_color'] ?? 'slate';
 
         if ($request->has('is_default') && $request->input('is_default')) {
@@ -349,7 +355,8 @@ class LoyaltyCardController extends Controller
 
         $tierModel = $customer->getTierModel();
         $pointValueRp = $tierModel ? $tierModel->point_value_rp : 100;
-        $discountPercent = $tierModel ? $tierModel->discount_percent : 0;
+        $discountNominal = $tierModel ? (float) ($tierModel->discount_nominal ?? 0) : 0;
+        $discountPercent = $tierModel ? (float) ($tierModel->discount_percent ?? 0) : 0;
         $pointMultiplier = $tierModel ? $tierModel->point_multiplier : 1.0;
 
         return response()->json([
@@ -361,6 +368,7 @@ class LoyaltyCardController extends Controller
                 'member_code' => $customer->member_code,
                 'tier' => $customer->tier,
                 'tier_badge_color' => $tierModel?->badge_color ?? 'emerald',
+                'tier_discount_nominal' => $discountNominal,
                 'tier_discount_percent' => $discountPercent,
                 'tier_multiplier' => $pointMultiplier,
                 'points' => $customer->points,
@@ -462,11 +470,20 @@ class LoyaltyCardController extends Controller
             ]);
         }
 
+        $tierModel = $customer->getTierModel();
+        $customerData = array_merge($customer->toArray(), [
+            'tier_badge_color' => $tierModel?->badge_color ?? 'emerald',
+            'tier_discount_nominal' => (float) ($tierModel?->discount_nominal ?? 0),
+            'tier_discount_percent' => (float) ($tierModel?->discount_percent ?? 0),
+            'tier_multiplier' => (float) ($tierModel?->point_multiplier ?? 1.0),
+            'points_value_rp' => $customer->points * ($tierModel?->point_value_rp ?? 100),
+        ]);
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Member baru berhasil didaftarkan!',
-                'customer' => $customer,
+                'customer' => $customerData,
                 'card_url' => $customer->card_url,
                 'whatsapp_url' => $customer->whatsapp_share_url,
             ]);
