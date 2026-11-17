@@ -13,6 +13,7 @@ class LoyaltyTier extends Model
         'point_multiplier',
         'discount_nominal',
         'discount_percent',
+        'max_redeem_rp',
         'point_value_rp',
         'badge_color',
         'perks',
@@ -25,6 +26,7 @@ class LoyaltyTier extends Model
         'point_multiplier' => 'float',
         'discount_nominal' => 'decimal:2',
         'discount_percent' => 'float',
+        'max_redeem_rp' => 'decimal:2',
         'point_value_rp' => 'integer',
         'is_default' => 'boolean',
     ];

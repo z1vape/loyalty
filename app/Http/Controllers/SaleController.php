@@ -292,10 +292,8 @@ class SaleController extends Controller
             $pointsRedeemed = (int) ($request->input('points_redeemed', 0));
             $pointsDiscount = (float) ($request->input('points_discount_amount', 0));
 
-            // Load Category Point Rules & Customer Tier Multiplier
+            // Load Category Point Rules
             $categoryRules = \App\Models\LoyaltyCategoryRule::where('is_active', true)->get()->keyBy(fn($r) => strtolower(trim($r->category_name)));
-            $tierModel = $customer?->getTierModel();
-            $tierMultiplier = $tierModel ? (float) $tierModel->point_multiplier : 1.0;
             $totalRawPointsEarned = 0;
 
             // Create Sale
@@ -388,14 +386,14 @@ class SaleController extends Controller
 
             // Process Customer Loyalty Rewards & Points
             if ($customer) {
-                $pointsEarned = (int) round($totalRawPointsEarned * $tierMultiplier);
+                $pointsEarned = (int) round($totalRawPointsEarned);
                 $sale->update(['points_earned' => $pointsEarned]);
 
                 if ($pointsRedeemed > 0) {
                     $customer->redeemPoints($pointsRedeemed, $sale->id, "Tukar {$pointsRedeemed} Poin di Transaksi {$refNumber}");
                 }
                 if ($pointsEarned > 0) {
-                    $customer->addPoints($pointsEarned, $sale->id, "Poin Belanja Transaksi {$refNumber} ({$customer->tier} {$tierMultiplier}x)");
+                    $customer->addPoints($pointsEarned, $sale->id, "Poin Belanja Transaksi {$refNumber} ({$customer->tier})");
                 }
                 if ($liquidBottlesCount > 0) {
                     $customer->addStamps($liquidBottlesCount, $sale->id, "Stempel {$liquidBottlesCount}x Liquid di Transaksi {$refNumber}");

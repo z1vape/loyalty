@@ -441,9 +441,8 @@
                                     <th class="py-3.5 px-4 w-16 text-center">Level</th>
                                     <th class="py-3.5 px-4">Nama &amp; Badge Tier</th>
                                     <th class="py-3.5 px-4">Min. Belanja</th>
-                                    <th class="py-3.5 px-4">Multiplier Poin</th>
                                     <th class="py-3.5 px-4">Diskon Belanja</th>
-                                    <th class="py-3.5 px-4">Nilai Tukar Poin</th>
+                                    <th class="py-3.5 px-4">Maks. Tukar Poin</th>
                                     <th class="py-3.5 px-4">Total Member</th>
                                     <th class="py-3.5 px-4 text-right w-24">Aksi</th>
                                 </tr>
@@ -486,28 +485,19 @@
                                             <span class="text-[10px] text-slate-400 block">Akumulasi belanja</span>
                                         </td>
                                         <td class="py-3.5 px-4">
-                                            <span class="font-mono font-extrabold text-[#006c49] text-xs px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200">
-                                                {{ $tier->point_multiplier }}x
-                                            </span>
-                                        </td>
-                                        <td class="py-3.5 px-4">
                                             @if(($tier->discount_nominal ?? 0) > 0)
                                                 <span class="font-mono font-bold text-indigo-700 text-xs px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200">
                                                     Rp {{ number_format($tier->discount_nominal, 0, ',', '.') }}
-                                                </span>
-                                            @elseif(($tier->discount_percent ?? 0) > 0)
-                                                <span class="font-mono font-bold text-indigo-700 text-xs px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200">
-                                                    {{ $tier->discount_percent }}%
                                                 </span>
                                             @else
                                                 <span class="text-slate-400 text-xs font-mono">Rp 0</span>
                                             @endif
                                         </td>
                                         <td class="py-3.5 px-4">
-                                            <span class="font-mono font-semibold text-slate-800 text-xs">
-                                                Rp {{ number_format($tier->point_value_rp, 0, ',', '.') }}
+                                            <span class="font-mono font-bold text-slate-800 text-xs">
+                                                Rp {{ number_format($tier->max_redeem_rp ?? 30000, 0, ',', '.') }}
                                             </span>
-                                            <span class="text-[10px] text-slate-400 block">per 1 Poin</span>
+                                            <span class="text-[10px] text-slate-400 block">Maks. per transaksi</span>
                                         </td>
                                         <td class="py-3.5 px-4">
                                             <span class="font-bold text-slate-900 font-mono text-xs">
@@ -544,7 +534,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="py-10 text-center text-slate-400">
+                                        <td colspan="7" class="py-10 text-center text-slate-400">
                                             Belum ada tier yang dibuat. Klik "+ TAMBAH TIER BARU" untuk membuat tier pertama.
                                         </td>
                                     </tr>
@@ -581,7 +571,7 @@
                                     <tr>
                                         <th class="py-3 px-4 w-20 text-center">Status</th>
                                         <th class="py-3 px-4">Kategori Produk</th>
-                                        <th class="py-3 px-4 w-52">Poin per Item / Satuan</th>
+                                        <th class="py-3 px-4 w-56">Nominal Poin per Item (Rp)</th>
                                         <th class="py-3 px-4">Simulasi Perolehan Poin Kasir</th>
                                     </tr>
                                 </thead>
@@ -594,7 +584,7 @@
                                             $catKey = strtolower(trim($cat));
                                             $rule = $ruleMap->get($catKey);
                                             $isActive = $rule ? (bool)$rule->is_active : true;
-                                            $pointsPerItem = $rule ? ($rule->points_per_item ?? 1) : 1;
+                                            $pointsPerItem = $rule ? ($rule->points_per_item ?? 1000) : 1000;
                                         @endphp
                                         <tr class="hover:bg-slate-50/70 transition-colors">
                                             <td class="py-3 px-4 text-center">
@@ -609,14 +599,15 @@
                                             </td>
                                             <td class="py-3 px-4">
                                                 <div class="flex items-center gap-1.5">
-                                                    <input type="number" step="1" min="0" max="1000" name="rules[{{ $cat }}][points_per_item]" value="{{ $pointsPerItem }}"
-                                                        class="w-20 px-3 py-1.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-800 focus:border-[#006c49] text-center" />
-                                                    <span class="text-xs text-slate-600 font-bold">Poin / pcs</span>
+                                                    <span class="text-xs text-slate-500 font-bold">Rp</span>
+                                                    <input type="number" step="100" min="0" max="1000000" name="rules[{{ $cat }}][points_per_item]" value="{{ $pointsPerItem }}"
+                                                        class="w-24 px-3 py-1.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-800 focus:border-[#006c49] text-center" />
+                                                    <span class="text-xs text-slate-600 font-bold">/ pcs</span>
                                                 </div>
                                             </td>
                                             <td class="py-3 px-4 text-slate-600 font-mono text-[11px]">
-                                                Beli 1 pcs = <strong class="text-emerald-700 font-bold">+{{ $pointsPerItem }} Poin</strong>
-                                                <span class="text-slate-400 ml-1.5">(Beli 2 pcs = +{{ $pointsPerItem * 2 }} Poin)</span>
+                                                Beli 1 pcs = <strong class="text-emerald-700 font-bold">+Rp {{ number_format($pointsPerItem, 0, ',', '.') }}</strong>
+                                                <span class="text-slate-400 ml-1.5">(Beli 2 pcs = +Rp {{ number_format($pointsPerItem * 2, 0, ',', '.') }})</span>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -629,10 +620,11 @@
                             <span class="text-xs font-bold text-slate-700 shrink-0">+ Tambah Kategori Lain:</span>
                             <input type="text" name="new_category_name" placeholder="Nama Kategori..."
                                 class="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:border-[#006c49]" />
-                            <div class="flex items-center gap-1.5 w-44">
-                                <input type="number" step="1" min="0" name="new_points_per_item" placeholder="1"
-                                    class="w-20 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49] text-center font-bold" />
-                                <span class="text-xs text-slate-600 font-semibold">Poin / pcs</span>
+                            <div class="flex items-center gap-1.5 w-48">
+                                <span class="text-xs text-slate-500 font-bold">Rp</span>
+                                <input type="number" step="100" min="0" name="new_points_per_item" placeholder="1000"
+                                    class="w-24 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:border-[#006c49] text-center font-bold" />
+                                <span class="text-xs text-slate-600 font-semibold">/ pcs</span>
                             </div>
                         </div>
 
@@ -643,6 +635,11 @@
                                 <p class="text-xs text-slate-500">Poin selamat datang yang langsung diberikan saat pelanggan pertama kali mendaftar sebagai member.</p>
                             </div>
                             <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-500 font-bold">Rp</span>
+                                <input type="number" name="welcome_bonus" value="{{ $welcomeBonus }}" min="0" max="100000" step="500"
+                                    class="w-28 px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:border-[#006c49] text-center font-bold" />
+                                <span class="text-xs font-semibold text-slate-600">Poin</span>
+                            </div>
                                 <input type="number" name="welcome_bonus" value="{{ $welcomeBonus }}" min="0" max="1000"
                                     class="w-28 px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:border-[#006c49] text-center font-bold" />
                                 <span class="text-xs font-semibold text-slate-600">Poin</span>
@@ -703,10 +700,16 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
-                            Multiplier Poin <span class="text-rose-500">*</span>
+                            Warna Badge
                         </label>
-                        <input type="number" step="0.05" min="0.1" max="10" name="point_multiplier" required value="1.0"
-                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
+                        <select name="badge_color" class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-medium text-slate-900">
+                            <option value="slate">Slate / Neutral (Starter)</option>
+                            <option value="emerald">Emerald / Hijau Z1</option>
+                            <option value="cyan">Cyan / Silver Sky</option>
+                            <option value="amber">Amber / Gold</option>
+                            <option value="purple">Purple / Prestige VIP</option>
+                            <option value="rose">Rose / Ruby</option>
+                        </select>
                     </div>
                 </div>
 
@@ -721,26 +724,12 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
-                            Nilai Tukar Poin (Rp/pt) <span class="text-rose-500">*</span>
+                            Batas Maks. Tukar Poin (Rp) <span class="text-rose-500">*</span>
                         </label>
-                        <input type="number" step="10" min="1" name="point_value_rp" required value="100"
+                        <input type="number" step="5000" min="0" name="max_redeem_rp" required value="30000" placeholder="30000"
                             class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
-                        <span class="text-[10px] text-slate-400">1 Poin = Potongan Rp ...</span>
+                        <span class="text-[10px] text-slate-400">Batas maksimal potongan poin per transaksi</span>
                     </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
-                        Warna Badge
-                    </label>
-                    <select name="badge_color" class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-medium text-slate-900">
-                        <option value="slate">Slate / Neutral (Starter)</option>
-                        <option value="emerald">Emerald / Hijau Z1</option>
-                        <option value="cyan">Cyan / Silver Sky</option>
-                        <option value="amber">Amber / Gold</option>
-                        <option value="purple">Purple / Prestige VIP</option>
-                        <option value="rose">Rose / Ruby</option>
-                    </select>
                 </div>
 
                 <div class="pt-2">
@@ -805,10 +794,16 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
-                            Multiplier Poin <span class="text-rose-500">*</span>
+                            Warna Badge
                         </label>
-                        <input type="number" step="0.05" min="0.1" max="10" id="edit_point_multiplier" name="point_multiplier" required
-                            class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
+                        <select id="edit_badge_color" name="badge_color" class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-medium text-slate-900">
+                            <option value="slate">Slate / Neutral (Starter)</option>
+                            <option value="emerald">Emerald / Hijau Z1</option>
+                            <option value="cyan">Cyan / Silver Sky</option>
+                            <option value="amber">Amber / Gold</option>
+                            <option value="purple">Purple / Prestige VIP</option>
+                            <option value="rose">Rose / Ruby</option>
+                        </select>
                     </div>
                 </div>
 
@@ -823,26 +818,12 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
-                            Nilai Tukar Poin (Rp/pt) <span class="text-rose-500">*</span>
+                            Batas Maks. Tukar Poin (Rp) <span class="text-rose-500">*</span>
                         </label>
-                        <input type="number" step="10" min="1" id="edit_point_value_rp" name="point_value_rp" required
+                        <input type="number" step="5000" min="0" id="edit_max_redeem_rp" name="max_redeem_rp" required
                             class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-mono text-slate-900" />
-                        <span class="text-[10px] text-slate-400">1 Poin = Potongan Rp ...</span>
+                        <span class="text-[10px] text-slate-400">Batas maksimal potongan poin per transaksi</span>
                     </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
-                        Warna Badge
-                    </label>
-                    <select id="edit_badge_color" name="badge_color" class="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#006c49] rounded-xl text-xs font-medium text-slate-900">
-                        <option value="slate">Slate / Neutral (Starter)</option>
-                        <option value="emerald">Emerald / Hijau Z1</option>
-                        <option value="cyan">Cyan / Silver Sky</option>
-                        <option value="amber">Amber / Gold</option>
-                        <option value="purple">Purple / Prestige VIP</option>
-                        <option value="rose">Rose / Ruby</option>
-                    </select>
                 </div>
 
                 <div class="pt-2">
@@ -1001,9 +982,8 @@
             document.getElementById('edit_name').value = tier.name;
             document.getElementById('edit_level').value = tier.level;
             document.getElementById('edit_min_spend').value = tier.min_spend;
-            document.getElementById('edit_point_multiplier').value = tier.point_multiplier;
             document.getElementById('edit_discount_nominal').value = tier.discount_nominal || 0;
-            document.getElementById('edit_point_value_rp').value = tier.point_value_rp;
+            document.getElementById('edit_max_redeem_rp').value = tier.max_redeem_rp || 30000;
             document.getElementById('edit_badge_color').value = tier.badge_color || 'slate';
             document.getElementById('edit_is_default').checked = Boolean(tier.is_default);
             document.getElementById('editTierModal').classList.remove('hidden');

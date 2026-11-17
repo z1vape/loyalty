@@ -121,16 +121,18 @@ class LoyaltyCardController extends Controller
             'name' => 'required|string|max:50|unique:loyalty_tiers,name',
             'level' => 'required|integer|min:1',
             'min_spend' => 'required|numeric|min:0',
-            'point_multiplier' => 'required|numeric|min:0.1|max:10',
             'discount_nominal' => 'nullable|numeric|min:0',
             'discount_percent' => 'nullable|numeric|min:0|max:100',
-            'point_value_rp' => 'required|integer|min:1',
+            'max_redeem_rp' => 'required|numeric|min:0',
             'badge_color' => 'nullable|string|max:20',
             'perks' => 'nullable|string|max:500',
         ]);
 
         $validated['discount_nominal'] = $request->input('discount_nominal', 0);
         $validated['discount_percent'] = $request->input('discount_percent', 0);
+        $validated['max_redeem_rp'] = $request->input('max_redeem_rp', 30000);
+        $validated['point_multiplier'] = 1.0;
+        $validated['point_value_rp'] = 1;
         $validated['badge_color'] = $validated['badge_color'] ?? 'slate';
         $validated['is_default'] = $request->has('is_default');
 
@@ -153,16 +155,18 @@ class LoyaltyCardController extends Controller
             'name' => 'required|string|max:50|unique:loyalty_tiers,name,' . $tier->id,
             'level' => 'required|integer|min:1',
             'min_spend' => 'required|numeric|min:0',
-            'point_multiplier' => 'required|numeric|min:0.1|max:10',
             'discount_nominal' => 'nullable|numeric|min:0',
             'discount_percent' => 'nullable|numeric|min:0|max:100',
-            'point_value_rp' => 'required|integer|min:1',
+            'max_redeem_rp' => 'required|numeric|min:0',
             'badge_color' => 'nullable|string|max:20',
             'perks' => 'nullable|string|max:500',
         ]);
 
         $validated['discount_nominal'] = $request->input('discount_nominal', 0);
         $validated['discount_percent'] = $request->input('discount_percent', 0);
+        $validated['max_redeem_rp'] = $request->input('max_redeem_rp', 30000);
+        $validated['point_multiplier'] = 1.0;
+        $validated['point_value_rp'] = 1;
         $validated['badge_color'] = $validated['badge_color'] ?? 'slate';
 
         if ($request->has('is_default') && $request->input('is_default')) {
@@ -354,10 +358,9 @@ class LoyaltyCardController extends Controller
         }
 
         $tierModel = $customer->getTierModel();
-        $pointValueRp = $tierModel ? $tierModel->point_value_rp : 100;
         $discountNominal = $tierModel ? (float) ($tierModel->discount_nominal ?? 0) : 0;
         $discountPercent = $tierModel ? (float) ($tierModel->discount_percent ?? 0) : 0;
-        $pointMultiplier = $tierModel ? $tierModel->point_multiplier : 1.0;
+        $maxRedeemRp = $tierModel ? (float) ($tierModel->max_redeem_rp ?? 30000) : 30000;
 
         return response()->json([
             'found' => true,
@@ -370,9 +373,10 @@ class LoyaltyCardController extends Controller
                 'tier_badge_color' => $tierModel?->badge_color ?? 'emerald',
                 'tier_discount_nominal' => $discountNominal,
                 'tier_discount_percent' => $discountPercent,
-                'tier_multiplier' => $pointMultiplier,
-                'points' => $customer->points,
-                'points_value_rp' => $customer->points * $pointValueRp,
+                'max_redeem_rp' => $maxRedeemRp,
+                'tier_multiplier' => 1.0,
+                'points' => (int) $customer->points,
+                'points_value_rp' => (int) $customer->points, // 1 Poin = Rp 1 (Pengumpulan Saldo Nominal)
                 'liquid_stamp_count' => $customer->liquid_stamp_count,
                 'rewards_available' => $customer->liquid_stamp_rewards_available,
                 'card_url' => $customer->card_url,
@@ -475,8 +479,9 @@ class LoyaltyCardController extends Controller
             'tier_badge_color' => $tierModel?->badge_color ?? 'emerald',
             'tier_discount_nominal' => (float) ($tierModel?->discount_nominal ?? 0),
             'tier_discount_percent' => (float) ($tierModel?->discount_percent ?? 0),
-            'tier_multiplier' => (float) ($tierModel?->point_multiplier ?? 1.0),
-            'points_value_rp' => $customer->points * ($tierModel?->point_value_rp ?? 100),
+            'max_redeem_rp' => (float) ($tierModel?->max_redeem_rp ?? 30000),
+            'tier_multiplier' => 1.0,
+            'points_value_rp' => (int) $customer->points,
         ]);
 
         if ($request->wantsJson()) {

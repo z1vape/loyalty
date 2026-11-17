@@ -299,22 +299,21 @@
                                 SALDO POIN MEMBER
                             </span>
                             <div class="flex items-baseline gap-1">
-                                <span class="font-orbitron font-black text-xl sm:text-2xl text-white tracking-tight leading-none drop-shadow">
-                                    {{ number_format($customer->points) }}
-                                </span>
-                                <span class="font-orbitron font-bold text-[10px] text-amber-400 tracking-wider">
-                                    POIN
+                                <span class="font-orbitron font-black text-lg sm:text-xl text-white tracking-tight leading-none drop-shadow">
+                                    Rp {{ number_format($customer->points, 0, ',', '.') }}
                                 </span>
                             </div>
+                            <span class="text-[8px] text-slate-400 block mt-0.5">1 Poin = Rp 1</span>
                         </div>
 
                         <div class="text-right">
                             <span class="text-[9px] sm:text-[10px] font-medium text-slate-400 uppercase tracking-wider block mb-0.5 leading-none">
-                                Potongan Belanja
+                                Maks. Tukar Poin
                             </span>
                             <div class="font-code font-bold text-sm sm:text-base text-emerald-400 tracking-wide leading-none drop-shadow">
-                                Rp {{ number_format($customer->points * ($currentTierModel->point_value_rp ?? 100), 0, ',', '.') }}
+                                Rp {{ number_format($currentTierModel->max_redeem_rp ?? 30000, 0, ',', '.') }}
                             </div>
+                            <span class="text-[8px] text-slate-400 block mt-0.5">/ transaksi kasir</span>
                         </div>
                     </div>
 
@@ -322,16 +321,9 @@
                     <div class="relative z-10 space-y-1.5 text-slate-400 text-[10px]">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-1.5">
-                                <span class="px-1.5 py-0.5 rounded bg-emerald-950/70 border border-emerald-800/60 text-emerald-400 font-mono font-bold text-[9px]">
-                                    {{ $currentTierModel->point_multiplier ?? 1 }}x Poin
-                                </span>
                                 @if(($currentTierModel->discount_nominal ?? 0) > 0)
-                                    <span class="px-1.5 py-0.5 rounded bg-indigo-950/70 border border-indigo-800/60 text-indigo-300 font-mono font-bold text-[9px]">
-                                        Diskon Rp {{ number_format($currentTierModel->discount_nominal, 0, ',', '.') }}
-                                    </span>
-                                @elseif(($currentTierModel->discount_percent ?? 0) > 0)
-                                    <span class="px-1.5 py-0.5 rounded bg-indigo-950/70 border border-indigo-800/60 text-indigo-300 font-mono font-bold text-[9px]">
-                                        Diskon {{ $currentTierModel->discount_percent }}%
+                                    <span class="px-2 py-0.5 rounded bg-indigo-950/70 border border-indigo-800/60 text-indigo-300 font-mono font-bold text-[9px]">
+                                        Diskon Belanja Rp {{ number_format($currentTierModel->discount_nominal, 0, ',', '.') }}
                                     </span>
                                 @endif
                             </div>

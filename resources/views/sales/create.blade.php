@@ -104,10 +104,13 @@
 
                             <!-- Redeem points checkbox option -->
                             <div class="mt-2.5 pt-2 border-t border-outline-variant/60 flex items-center justify-between">
-                                <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-on-surface">
-                                    <input type="checkbox" id="check_redeem_points" onchange="toggleRedeemPoints(this)" class="rounded text-primary focus:ring-0">
-                                    <span>Tukar Poin Diskon</span>
-                                </label>
+                                <div>
+                                    <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-on-surface">
+                                        <input type="checkbox" id="check_redeem_points" onchange="toggleRedeemPoints(this)" class="rounded text-primary focus:ring-0">
+                                        <span>Tukar Poin Diskon</span>
+                                    </label>
+                                    <span class="text-[10px] text-slate-400 block pl-6" id="max_redeem_hint">Maks. Rp 30.000 / trx</span>
+                                </div>
                                 <span class="text-xs font-bold text-emerald-600 hidden" id="redeem_points_value_display"></span>
                             </div>
 
@@ -358,15 +361,16 @@
         let grandTotal = netBeforeTierDiscount - tierDiscountAmount;
         if (grandTotal < 0) grandTotal = 0;
 
-        // Points Discount Calculation
+        // Points Discount Calculation (Batas Maksimal Tukar Poin per Transaksi)
         let pointsDiscountAmount = 0;
         let pointsRedeemed = 0;
 
         if (activeCustomer && isRedeemingPoints && activeCustomer.points > 0) {
-            const maxPointsRp = activeCustomer.points_value_rp; // Rp value of available points based on tier
-            const pointRate = (activeCustomer.points > 0) ? (activeCustomer.points_value_rp / activeCustomer.points) : 100;
-            pointsDiscountAmount = Math.min(maxPointsRp, grandTotal);
-            pointsRedeemed = Math.ceil(pointsDiscountAmount / (pointRate || 100));
+            const customerPoints = activeCustomer.points; // 1 Poin = Rp 1
+            const maxTierRedeemRp = activeCustomer.max_redeem_rp || 30000;
+            // Potongan maksimal tidak melebihi saldo customer, batas maksimal tier, dan grandTotal belanja
+            pointsDiscountAmount = Math.min(customerPoints, maxTierRedeemRp, grandTotal);
+            pointsRedeemed = pointsDiscountAmount;
             grandTotal -= pointsDiscountAmount;
 
             document.getElementById('summary-points-row').classList.remove('hidden');
@@ -386,13 +390,11 @@
         document.getElementById('summary-total').innerText = formatCurrency(grandTotal > 0 ? grandTotal : 0);
         document.getElementById('input_total_amount').value = grandTotal > 0 ? grandTotal : 0;
 
-        // Estimated Earned Points Box (Based on item categories and tier multiplier)
+        // Estimated Earned Points Box (Based on item categories nominal accumulation)
         const pointsEarnedBox = document.getElementById('summary-points-earned-box');
         if (activeCustomer) {
-            const multiplier = activeCustomer.tier_multiplier || 1.0;
-            const estPoints = Math.round(totalRawPointsEarned * multiplier);
             pointsEarnedBox.classList.remove('hidden');
-            document.getElementById('summary-points-earned').innerText = `+${estPoints} Poin (${multiplier}x)`;
+            document.getElementById('summary-points-earned').innerText = `+${formatCurrency(totalRawPointsEarned)} Poin`;
         } else {
             pointsEarnedBox.classList.add('hidden');
         }
@@ -428,9 +430,12 @@
         // Update display card
         document.getElementById('selected-customer-name-display').innerText = cust.name;
         document.getElementById('selected-customer-meta').innerText = `${cust.member_code} • ${cust.phone}`;
-        const pointValueRp = cust.points_value_rp ?? (cust.points * 100);
-        document.getElementById('selected-customer-points').innerText = `${cust.points.toLocaleString('id-ID')} Poin (Rp ${pointValueRp.toLocaleString('id-ID')})`;
+        document.getElementById('selected-customer-points').innerText = `${cust.points.toLocaleString('id-ID')} Poin (Rp ${cust.points.toLocaleString('id-ID')})`;
         document.getElementById('selected-customer-stamps').innerText = `${cust.liquid_stamp_count} / 5 Stempel`;
+
+        const maxRedeem = cust.max_redeem_rp || 30000;
+        const hint = document.getElementById('max_redeem_hint');
+        if (hint) hint.innerText = `Maks. ${formatCurrency(maxRedeem)} / transaksi`;
 
         const badge = document.getElementById('selected-customer-tier-badge');
         badge.innerText = `★ ${cust.tier.toUpperCase()}`;
@@ -533,9 +538,10 @@
                     tier_badge_color: data.customer.tier_badge_color || 'emerald',
                     tier_discount_nominal: data.customer.tier_discount_nominal || 0,
                     tier_discount_percent: data.customer.tier_discount_percent || 0,
-                    tier_multiplier: data.customer.tier_multiplier || 1.0,
+                    max_redeem_rp: data.customer.max_redeem_rp || 30000,
+                    tier_multiplier: 1.0,
                     points: data.customer.points,
-                    points_value_rp: data.customer.points_value_rp ?? (data.customer.points * 100),
+                    points_value_rp: data.customer.points,
                     liquid_stamp_count: data.customer.liquid_stamp_count,
                     whatsapp_url: data.whatsapp_url
                 });
