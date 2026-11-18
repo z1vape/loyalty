@@ -447,7 +447,40 @@ class PosApiController extends Controller
 
                 // 3. Liquid stamps
                 if ($liquidBottlesCount > 0) {
-                    $customer->addLiquidStamps($liquidBottlesCount, $sale->id, "Stempel Pembelian {$liquidBottlesCount} Botol Liquid POS {$refNumber}", $storeId);
+                    try {
+                        if (method_exists($customer, 'addStamps')) {
+                            $customer->addStamps($liquidBottlesCount, $sale->id, "Stempel Pembelian {$liquidBottlesCount} Botol Liquid POS {$refNumber}", $storeId);
+                        } elseif (method_exists($customer, 'addLiquidStamps')) {
+                            $customer->addLiquidStamps($liquidBottlesCount, $sale->id, "Stempel Pembelian {$liquidBottlesCount} Botol Liquid POS {$refNumber}", $storeId);
+                        } else {
+                            throw new \Exception('No stamp method on Customer model');
+                        }
+                    } catch (\Throwable $t) {
+                        // Resilient fallback: direct stamp computation on customer model
+                        $currentStamps = (int) ($customer->liquid_stamp_count ?? 0);
+                        $newStampCount = $currentStamps + $liquidBottlesCount;
+                        $newRewards = intdiv($newStampCount, 5);
+                        $remainingStamps = $newStampCount % 5;
+
+                        $customer->liquid_stamp_count = $remainingStamps;
+                        if ($newRewards > 0) {
+                            $customer->liquid_stamp_rewards_available = ((int) ($customer->liquid_stamp_rewards_available ?? 0)) + $newRewards;
+                        }
+                        $customer->save();
+
+                        LoyaltyLog::create([
+                            'customer_id' => $customer->id,
+                            'store_id' => $storeId,
+                            'sale_id' => $sale->id,
+                            'user_id' => $validated['user_id'] ?? 1,
+                            'type' => 'earn_stamp',
+                            'points_change' => 0,
+                            'points_balance' => (int) ($customer->points ?? 0),
+                            'stamps_change' => $liquidBottlesCount,
+                            'stamps_balance' => $remainingStamps,
+                            'description' => "Stempel Pembelian {$liquidBottlesCount} Botol Liquid POS {$refNumber}" . ($newRewards > 0 ? " (Selamat! Anda dapat {$newRewards} hadiah stempel)" : ''),
+                        ]);
+                    }
                 }
 
                 // 4. Accumulate total_spent & check tier upgrade
