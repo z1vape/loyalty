@@ -447,16 +447,7 @@ class PosApiController extends Controller
 
                 // 3. Liquid stamps
                 if ($liquidBottlesCount > 0) {
-                    $customer->addLiquidStamps($liquidBottlesCount);
-                    LoyaltyLog::create([
-                        'customer_id' => $customer->id,
-                        'sale_id' => $sale->id,
-                        'store_id' => $storeId,
-                        'type' => 'earn_stamp',
-                        'stamps_change' => $liquidBottlesCount,
-                        'stamps_balance' => $customer->liquid_stamp_count,
-                        'description' => "Stempel Pembelian {$liquidBottlesCount} Botol Liquid POS {$refNumber}",
-                    ]);
+                    $customer->addLiquidStamps($liquidBottlesCount, $sale->id, "Stempel Pembelian {$liquidBottlesCount} Botol Liquid POS {$refNumber}", $storeId);
                 }
 
                 // 4. Accumulate total_spent & check tier upgrade

@@ -155,7 +155,7 @@ class Customer extends Model
     /**
      * Add liquid stamps (every 5 stamps earns 1 reward)
      */
-    public function addStamps(int $count, ?int $saleId = null, string $description = 'Stempel Beli Liquid'): void
+    public function addStamps(int $count, ?int $saleId = null, string $description = 'Stempel Beli Liquid', ?int $storeId = null): void
     {
         if ($count <= 0) return;
 
@@ -171,9 +171,9 @@ class Customer extends Model
 
         LoyaltyLog::create([
             'customer_id' => $this->id,
-            'store_id' => $this->store_id,
+            'store_id' => $storeId ?? $this->store_id,
             'sale_id' => $saleId,
-            'user_id' => auth()->id(),
+            'user_id' => auth()->id() ?? request('user_id'),
             'type' => 'earn_stamp',
             'points_change' => 0,
             'points_balance' => $this->points,
@@ -181,6 +181,14 @@ class Customer extends Model
             'stamps_balance' => $this->liquid_stamp_count,
             'description' => $description . ($newRewards > 0 ? " (Selamat! Anda dapat {$newRewards} hadiah stempel)" : ''),
         ]);
+    }
+
+    /**
+     * Alias for addStamps
+     */
+    public function addLiquidStamps(int $count, ?int $saleId = null, string $description = 'Stempel Beli Liquid', ?int $storeId = null): void
+    {
+        $this->addStamps($count, $saleId, $description, $storeId);
     }
 
     /**
